@@ -1,0 +1,401 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
+import {
+  PrismaService,
+} from '../prisma/prisma.service';
+
+import {
+  CreateMessageDto,
+} from './dto/create-message.dto';
+
+import {
+  NotificationsService,
+} from '../notifications/notifications.service';
+
+@Injectable()
+export class ConnectionsService {
+  constructor(
+    private readonly prisma: PrismaService,
+
+    private readonly notificationsService:
+      NotificationsService,
+  ) {}
+
+  private readonly petSelect = {
+    id: true,
+    name: true,
+    breed: true,
+    size: true,
+    birthDate: true,
+    bio: true,
+    energyLevel: true,
+    sociability: true,
+    playfulness: true,
+
+    photos: {
+      select: {
+        id: true,
+        storageKey: true,
+        sortOrder: true,
+      },
+
+      orderBy: {
+        sortOrder: 'asc' as const,
+      },
+    },
+  };
+
+  async findMine(userId: string) {
+    const connections =
+      await this.prisma.connection.findMany({
+        where: {
+          status: 'ACTIVE',
+
+          OR: [
+            {
+              userAId: userId,
+            },
+
+            {
+              userBId: userId,
+            },
+          ],
+        },
+
+        include: {
+          petA: {
+            select: this.petSelect,
+          },
+
+          petB: {
+            select: this.petSelect,
+          },
+        },
+
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+    return connections.map(
+      (connection) => {
+        const isUserA =
+          connection.userAId === userId;
+
+        return {
+          id: connection.id,
+
+          status:
+            connection.status,
+
+          compatibility:
+            connection.compatibility,
+
+          algorithmVersion:
+            connection.algorithmVersion,
+
+          createdAt:
+            connection.createdAt,
+
+          currentPet: isUserA
+            ? connection.petA
+            : connection.petB,
+
+          otherPet: isUserA
+            ? connection.petB
+            : connection.petA,
+        };
+      },
+    );
+  }
+
+  async findOne(
+    connectionId: string,
+    userId: string,
+  ) {
+    const connection =
+      await this.prisma.connection.findFirst({
+        where: {
+          id: connectionId,
+
+          status: 'ACTIVE',
+
+          OR: [
+            {
+              userAId: userId,
+            },
+
+            {
+              userBId: userId,
+            },
+          ],
+        },
+
+        include: {
+          petA: {
+            select: this.petSelect,
+          },
+
+          petB: {
+            select: this.petSelect,
+          },
+        },
+      });
+
+    if (!connection) {
+      throw new NotFoundException(
+        'Conexión no encontrada',
+      );
+    }
+
+    const isUserA =
+      connection.userAId === userId;
+
+    const currentPet =
+      isUserA
+        ? connection.petA
+        : connection.petB;
+
+    const otherPet =
+      isUserA
+        ? connection.petB
+        : connection.petA;
+
+    return {
+      id: connection.id,
+
+      status:
+        connection.status,
+
+      compatibility:
+        connection.compatibility,
+
+      algorithmVersion:
+        connection.algorithmVersion,
+
+      createdAt:
+        connection.createdAt,
+
+      currentPet,
+
+      otherPet,
+    };
+  }
+
+  private async getAuthorizedConnection(
+    connectionId: string,
+    userId: string,
+  ) {
+    const connection =
+      await this.prisma.connection.findFirst({
+        where: {
+          id: connectionId,
+
+          status: 'ACTIVE',
+
+          OR: [
+            {
+              userAId: userId,
+            },
+
+            {
+              userBId: userId,
+            },
+          ],
+        },
+      });
+
+    if (!connection) {
+      throw new NotFoundException(
+        'Conexión no encontrada',
+      );
+    }
+
+    return connection;
+  }
+
+  async findMessages(
+    connectionId: string,
+    userId: string,
+  ) {
+    await this.getAuthorizedConnection(
+      connectionId,
+      userId,
+    );
+
+    return this.prisma.message.findMany({
+      where: {
+        connectionId,
+      },
+
+      select: {
+        id: true,
+
+        connectionId: true,
+
+        senderId: true,
+
+        body: true,
+
+        createdAt: true,
+
+        sender: {
+          select: {
+            id: true,
+
+            displayName: true,
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  async createMessage(
+    connectionId: string,
+    userId: string,
+    dto: CreateMessageDto,
+  ) {
+    const connection =
+      await this.getAuthorizedConnection(
+        connectionId,
+        userId,
+      );
+
+    const body =
+      dto.body.trim();
+
+    if (!body) {
+      throw new BadRequestException(
+        'El mensaje no puede estar vacío',
+      );
+    }
+
+    const isUserA =
+      connection.userAId === userId;
+
+    const senderPetId =
+      isUserA
+        ? connection.petAId
+        : connection.petBId;
+
+    const recipientUserId =
+      isUserA
+        ? connection.userBId
+        : connection.userAId;
+
+    const recipientPetId =
+      isUserA
+        ? connection.petBId
+        : connection.petAId;
+
+    const pets =
+      await this.prisma.pet.findMany({
+        where: {
+          id: {
+            in: [
+              senderPetId,
+              recipientPetId,
+            ],
+          },
+        },
+
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+    const senderPet =
+      pets.find(
+        (pet) =>
+          pet.id === senderPetId,
+      );
+
+    const recipientPet =
+      pets.find(
+        (pet) =>
+          pet.id === recipientPetId,
+      );
+
+    const message =
+      await this.prisma.message.create({
+        data: {
+          connectionId,
+
+          senderId: userId,
+
+          body,
+        },
+
+        select: {
+          id: true,
+
+          connectionId: true,
+
+          senderId: true,
+
+          body: true,
+
+          createdAt: true,
+
+          sender: {
+            select: {
+              id: true,
+
+              displayName: true,
+            },
+          },
+        },
+      });
+
+    /*
+     * La creación de la notificación no debe
+     * impedir que el mensaje se entregue.
+     *
+     * Si por alguna razón el sistema de
+     * notificaciones falla, el mensaje sigue
+     * siendo válido y queda almacenado.
+     */
+    try {
+      if (
+        senderPet &&
+        recipientPet
+      ) {
+        await this.notificationsService
+          .createMessageNotification({
+            recipientUserId,
+
+            recipientPetId,
+
+            connectionId,
+
+            messageId:
+              message.id,
+
+            senderPetName:
+              senderPet.name,
+
+            recipientPetName:
+              recipientPet.name,
+
+            message,
+          });
+      }
+    } catch (notificationError) {
+      console.error(
+        'No fue posible crear la notificación del mensaje:',
+        notificationError,
+      );
+    }
+
+    return message;
+  }
+}

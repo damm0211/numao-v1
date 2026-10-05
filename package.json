@@ -1,0 +1,18 @@
+{
+  "name": "numao-v1",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "db:generate": "npm --prefix apps/api run prisma:generate",
+    "db:migrate": "npm --prefix apps/api run prisma:migrate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prisma": "^6.19.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
+  }
+}

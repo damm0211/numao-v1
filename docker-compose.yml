@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: numao-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: numao
+      POSTGRES_PASSWORD: numao_dev
+      POSTGRES_DB: numao
+    ports:
+      - "5432:5432"
+    volumes:
+      - numao_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U numao -d numao"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  numao_pgdata:

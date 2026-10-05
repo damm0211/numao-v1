@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+.next/
+coverage/
+
+# Runtime / uploads
+uploads/
+
+# Logs
+*.log
+
+# Local backups
+_backup-*/
+
+# Local diagnostic / temporary files
+check-*.cjs
+check.sql
+*.txt
+*.ps1
+tablas.sql
+# Local backup copies inside source tree
+**/*.backup-*
+**/*.backup
+**/*copia*
+**/*.antes-recuperacion
+**/*.corrupto-*
+**/*.roto-*
+**/*.validado
+**/*.VALIDO-BASE-*
+# TypeScript build cache
+*.tsbuildinfo
+
+# Backup TypeScript files
+**/*.backup.tsx
+**/*.backup-*.tsx
+# Old inactive route copy
+apps/web/app/mascotas/`[id`]/preferencias/
+/apps/web/mascotas/`[id`]/preferencias/page.tsx
+# Old inactive mascotas route copy
+apps/web/app/mascotas/*id*/preferencias/

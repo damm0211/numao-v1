@@ -1,0 +1,397 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../apps/api/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  PAUSED
+  SUSPENDED
+  DELETED
+}
+
+enum PetStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum InterestType {
+  PLAY
+  WALK
+  SOCIALIZE
+  REPRODUCTION
+}
+
+enum InterestState {
+  PENDING
+  MATCHED
+  REJECTED
+  BLOCKED
+}
+
+enum ConnectionStatus {
+  ACTIVE
+  CANCELLED
+  BLOCKED
+  CLOSED
+}
+
+enum MeetupStatus {
+  PROPOSED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum ModerationRole {
+  VIEWER
+  REVIEWER
+  ADMIN
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  NEW_CONNECTION
+  NEW_INTEREST
+  MEETING_PROPOSAL
+  MEETING_CONFIRMED
+  MEETING_CANCELLED
+}
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  ACTIONED
+  DISMISSED
+}
+
+enum PetFriendlyPlaceType {
+  PARK
+  CAFE
+  RESTAURANT
+  SHOPPING
+  OTHER
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  displayName  String
+  dateOfBirth  DateTime
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  pets            Pet[]
+  connectionsA    Connection[]               @relation("connectionA")
+  connectionsB    Connection[]               @relation("connectionB")
+  moderationRoles ModerationRoleAssignment[]
+  auditEvents     AuditEvent[]
+  messages        Message[]
+  notifications   Notification[]
+meetupReviewsGiven     MeetupReview[] @relation("meetupReviewsGiven")
+meetupReviewsReceived  MeetupReview[] @relation("meetupReviewsReceived")
+blocksGiven            UserBlock[]    @relation("userBlocksGiven")
+blocksReceived         UserBlock[]    @relation("userBlocksReceived")
+reportsGiven           UserReport[]   @relation("userReportsGiven")
+reportsReceived        UserReport[]   @relation("userReportsReceived")
+
+}
+
+model Pet {
+  id          String    @id @default(cuid())
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  name        String
+  birthDate   DateTime
+  breed       String?
+  size        String?
+  energyLevel Int?
+  sociability Int?
+  playfulness Int?
+  bio         String?
+  latitude    Decimal?  @db.Decimal(9, 6)
+  longitude   Decimal?  @db.Decimal(9, 6)
+  status      PetStatus @default(ACTIVE)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  interests         PetPreference[]
+  availability      PetAvailability[]
+  sentInterests     PetInterest[]     @relation("petSentInterests")
+  receivedInterests PetInterest[]     @relation("petReceivedInterests")
+  connectionsA      Connection[]      @relation("petConnectionA")
+  connectionsB      Connection[]      @relation("petConnectionB")
+  meetupsA          Meetup[]          @relation("meetupPetA")
+  meetupsB          Meetup[]          @relation("meetupPetB")
+  documents         PetDocument[]
+  photos            PetPhoto[]
+  notifications     Notification[]
+
+  @@index([ownerId, status])
+  @@index([status])
+}
+
+model PetPreference {
+  id      String       @id @default(cuid())
+  petId   String
+  pet     Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  type    InterestType
+  enabled Boolean      @default(true)
+
+  @@unique([petId, type])
+}
+
+model PetAvailability {
+  id          String @id @default(cuid())
+  petId       String
+  pet         Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+  weekday     Int
+  startMinute Int
+  endMinute   Int
+
+  @@index([petId, weekday])
+}
+
+model PetInterest {
+  id        String        @id @default(cuid())
+  fromPetId String
+  toPetId   String
+  type      InterestType
+  state     InterestState @default(PENDING)
+  createdAt DateTime      @default(now())
+
+  fromPet Pet @relation("petSentInterests", fields: [fromPetId], references: [id], onDelete: Cascade)
+  toPet   Pet @relation("petReceivedInterests", fields: [toPetId], references: [id], onDelete: Cascade)
+
+  @@unique([fromPetId, toPetId, type])
+  @@index([toPetId, state])
+}
+
+model Connection {
+  id               String           @id @default(cuid())
+  userAId          String
+  userBId          String
+  petAId           String
+  petBId           String
+  compatibility    Int
+  algorithmVersion String
+  status           ConnectionStatus @default(ACTIVE)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  userA User @relation("connectionA", fields: [userAId], references: [id], onDelete: Restrict)
+  userB User @relation("connectionB", fields: [userBId], references: [id], onDelete: Restrict)
+  petA  Pet  @relation("petConnectionA", fields: [petAId], references: [id], onDelete: Restrict)
+  petB  Pet  @relation("petConnectionB", fields: [petBId], references: [id], onDelete: Restrict)
+
+  messages      Message[]
+  meetups       Meetup[]
+  reports UserReport[]
+  notifications Notification[]
+
+  @@index([userAId, status])
+  @@index([userBId, status])
+  @@index([petAId, petBId])
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  connectionId String
+  senderId     String
+  body         String
+  createdAt    DateTime @default(now())
+
+  connection    Connection     @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  sender        User           @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  notifications Notification[]
+  reports UserReport[]
+
+  @@index([connectionId, createdAt])
+}
+
+model Meetup {
+  id               String       @id @default(cuid())
+  connectionId     String
+  petAId           String
+  petBId           String
+  proposedByUserId String
+  startAt          DateTime
+  endAt            DateTime?
+  placeName        String
+  placeAddress     String?
+  latitude         Decimal?     @db.Decimal(9, 6)
+  longitude        Decimal?     @db.Decimal(9, 6)
+  petFriendlyPlaceId String?
+  status           MeetupStatus @default(PROPOSED)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  petA       Pet        @relation("meetupPetA", fields: [petAId], references: [id], onDelete: Restrict)
+  petB       Pet        @relation("meetupPetB", fields: [petBId], references: [id], onDelete: Restrict)
+  petFriendlyPlace PetFriendlyPlace? @relation(fields: [petFriendlyPlaceId], references: [id], onDelete: SetNull)
+  @@index([connectionId, status])
+  @@index([petFriendlyPlaceId])
+  reviews MeetupReview[]
+  reports UserReport[]
+}
+
+model PetDocument {
+  id         String    @id @default(cuid())
+  petId      String
+  type       String
+  storageKey String
+  verifiedAt DateTime?
+  verifiedBy String?
+  createdAt  DateTime  @default(now())
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, type])
+}
+
+model PetPhoto {
+  id         String   @id @default(cuid())
+  petId      String
+  storageKey String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, sortOrder])
+}
+
+model ModerationRoleAssignment {
+  id        String         @id @default(cuid())
+  userId    String
+  role      ModerationRole
+  createdAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([actorId, createdAt])
+}
+
+model Notification {
+  id           String           @id @default(cuid())
+  userId       String
+  petId        String?
+  connectionId String?
+  messageId    String?
+  type         NotificationType
+  title        String
+  body         String
+  readAt       DateTime?
+  createdAt    DateTime         @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet        Pet?        @relation(fields: [petId], references: [id], onDelete: Cascade)
+  connection Connection? @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  message    Message?    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@index([petId, createdAt])
+  @@index([connectionId, createdAt])
+  @@index([messageId])
+  @@index([type, createdAt])
+}
+
+model PetFriendlyPlace {
+  id          String               @id @default(cuid())
+  name        String
+  type        PetFriendlyPlaceType
+  address     String
+  commune     String
+  city        String               @default("Santiago")
+  latitude    Decimal?             @db.Decimal(9, 6)
+  longitude   Decimal?             @db.Decimal(9, 6)
+  photoUrl    String?
+  description String?
+  verified    Boolean              @default(false)
+  active      Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  meetups     Meetup[]
+
+  @@index([active, type])
+  @@index([active, commune])
+}
+model MeetupReview {
+  id                String   @id @default(cuid())
+  meetupId          String
+  reviewerId        String
+  reviewedUserId    String
+  overallRating     Int
+  petBehaviorRating Int?
+  comment           String?
+  createdAt         DateTime @default(now())
+
+  meetup       Meetup @relation(fields: [meetupId], references: [id], onDelete: Cascade)
+  reviewer     User   @relation("meetupReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewedUser User   @relation("meetupReviewsReceived", fields: [reviewedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([meetupId, reviewerId])
+  @@index([reviewedUserId, createdAt])
+  @@index([meetupId])
+}
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("userBlocksGiven", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("userBlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId, createdAt])
+}
+model UserReport {
+  id             String       @id @default(cuid())
+  reporterId     String
+  reportedUserId String
+  connectionId   String?
+  messageId      String?
+  meetupId       String?
+  reason         String
+  details        String?
+  status         ReportStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  reporter     User        @relation("userReportsGiven", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User        @relation("userReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  connection   Connection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  message      Message?    @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  meetup       Meetup?     @relation(fields: [meetupId], references: [id], onDelete: SetNull)
+
+  @@index([reportedUserId, status, createdAt])
+  @@index([reporterId, createdAt])
+  @@index([connectionId, createdAt])
+  @@index([messageId])
+  @@index([meetupId])
+}
