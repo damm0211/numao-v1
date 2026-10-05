@@ -1,11 +1,14 @@
 {
   "name": "@numao/api",
   "private": true,
-  "scripts": {
-    "start:dev": "nest start --watch",
-    "prisma:generate": "prisma generate --schema ../../prisma/schema.prisma",
-    "prisma:migrate": "prisma migrate dev"
-  },
+ 
+"scripts": {
+  "start:dev": "nest start --watch",
+  "build": "nest build",
+  "start": "node dist/main.js",
+  "prisma:generate": "prisma generate --schema ../../prisma/schema.prisma",
+  "prisma:migrate": "prisma migrate dev"
+},
   "dependencies": {
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^12.0.1",
