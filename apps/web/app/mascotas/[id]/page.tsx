@@ -454,7 +454,7 @@ export default function PetProfilePage() {
         <button
           type="button"
           className="logoButton"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/mi-cuenta')}
           aria-label="Volver al inicio"
         >
           <span
@@ -904,3 +904,4 @@ export default function PetProfilePage() {
     </main>
   );
 }
+

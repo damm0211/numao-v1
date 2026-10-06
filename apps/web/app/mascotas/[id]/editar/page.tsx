@@ -655,7 +655,7 @@ export default function EditPetPage() {
           type="button"
           className="logoButton"
           onClick={() =>
-            router.push('/')
+            router.push('/mi-cuenta')
           }
           aria-label="Volver al inicio"
         >

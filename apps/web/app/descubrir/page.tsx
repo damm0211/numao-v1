@@ -804,7 +804,7 @@ if (data?.status === 'MATCHED') {
             <button
               type="button"
               onClick={() =>
-                router.push('/')
+                router.push('/mi-cuenta')
               }
               style={{
                 border: 0,
@@ -1237,7 +1237,7 @@ if (data?.status === 'MATCHED') {
           <button
             type="button"
             onClick={() =>
-              router.push('/')
+              router.push('/mi-cuenta')
             }
             aria-label="Volver al inicio"
             style={{
@@ -2553,4 +2553,5 @@ if (data?.status === 'MATCHED') {
     </main>
   );
 }
+
 

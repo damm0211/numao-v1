@@ -227,7 +227,7 @@ export default function PetPreferencesPage() {
         <button
           type="button"
           className="logoButton"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/mi-cuenta')}
           aria-label="Volver al inicio"
         >
           <span className="miniBrandMark" aria-hidden="true">

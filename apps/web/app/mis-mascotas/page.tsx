@@ -534,7 +534,7 @@ export default function MisMascotasPage() {
         <button
           type="button"
           className="logoButton"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/mi-cuenta')}
           aria-label="Volver al inicio"
         >
           <span className="miniBrandMark" aria-hidden="true">
@@ -1440,7 +1440,7 @@ onClick={() => goToDiscover(pet)}
         <button
           type="button"
           className="backLink"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/mi-cuenta')}
         >
             Volver al inicio
         </button>
@@ -1448,3 +1448,4 @@ onClick={() => goToDiscover(pet)}
     </main>
   );
 }
+

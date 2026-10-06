@@ -481,7 +481,7 @@ export default function ConnectionsPage() {
           <button
             type="button"
             onClick={() =>
-              router.push('/')
+              router.push('/mi-cuenta')
             }
             aria-label="Volver al inicio"
             style={{
@@ -1301,3 +1301,4 @@ export default function ConnectionsPage() {
     </main>
   );
 }
+

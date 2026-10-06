@@ -243,7 +243,7 @@ export default function CrearMascotaPage() {
         <button
           type="button"
           className="logoButton"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/mi-cuenta')}
           aria-label="Volver al inicio"
         >
           <span className="miniBrandMark" aria-hidden="true">
@@ -492,3 +492,4 @@ export default function CrearMascotaPage() {
     </main>
   );
 }
+
