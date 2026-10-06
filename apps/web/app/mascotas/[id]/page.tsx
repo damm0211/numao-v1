@@ -375,9 +375,14 @@ export default function PetProfilePage() {
     return active;
   }
 
-  function getPhotoUrl(
+    function getPhotoUrl(
     storageKey: string,
+    url?: string,
   ) {
+    if (url) {
+      return url;
+    }
+
     if (
       storageKey.startsWith('http://') ||
       storageKey.startsWith('https://')
@@ -392,7 +397,6 @@ export default function PetProfilePage() {
 
     return `${API_ORIGIN}/uploads/${normalizedKey}`;
   }
-
   if (loading) {
     return (
       <main className="shell petsShell">
