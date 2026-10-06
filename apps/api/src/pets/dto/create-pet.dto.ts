@@ -7,7 +7,10 @@ import {
   Max,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreatePetPreferencesDto } from './create-pet-preferences.dto';
 
 export class CreatePetDto {
   @IsString()
@@ -46,4 +49,8 @@ export class CreatePetDto {
   @IsOptional()
   @IsString()
   bio?: string;
+
+  @ValidateNested()
+  @Type(() => CreatePetPreferencesDto)
+  preferences!: CreatePetPreferencesDto;
 }
