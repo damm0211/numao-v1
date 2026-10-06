@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -9,14 +10,11 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { Request } from 'express';
-import { randomUUID } from 'crypto';
 import { extname } from 'path';
-import { mkdirSync } from 'fs';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PhotosService } from './photos.service';
@@ -27,13 +25,6 @@ interface AuthenticatedRequest extends Request {
     email: string;
   };
 }
-
-const uploadDirectory =
-  'uploads/pets';
-
-mkdirSync(uploadDirectory, {
-  recursive: true,
-});
 
 @Controller('pets/:petId/photos')
 @UseGuards(JwtAuthGuard)
@@ -56,24 +47,7 @@ export class PhotosController {
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: uploadDirectory,
-
-        filename: (
-          _request,
-          file,
-          callback,
-        ) => {
-          const extension =
-            extname(file.originalname)
-              .toLowerCase() || '.jpg';
-
-          callback(
-            null,
-            `${randomUUID()}${extension}`,
-          );
-        },
-      }),
+      storage: memoryStorage(),
 
       limits: {
         fileSize: 8 * 1024 * 1024,
@@ -118,10 +92,16 @@ export class PhotosController {
       );
     }
 
+    const extension =
+      extname(file.originalname)
+        .toLowerCase() || '.jpg';
+
     return this.photosService.create(
       petId,
       request.user.id,
-      `pets/${file.filename}`,
+      file.buffer,
+      file.mimetype,
+      extension,
     );
   }
 

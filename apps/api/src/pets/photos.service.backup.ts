@@ -1,35 +1,30 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-
 import { PrismaService } from '../prisma/prisma.service';
 import { supabase } from '../supabase';
 import { PETS_BUCKET } from '../storage';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PhotosService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private async getOwnedPet(
     petId: string,
     userId: string,
   ) {
-    const pet =
-      await this.prisma.pet.findFirst({
-        where: {
-          id: petId,
-          ownerId: userId,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const pet = await this.prisma.pet.findFirst({
+      where: {
+        id: petId,
+        ownerId: userId,
+      },
+      select: {
+        id: true,
+      },
+    });
 
     if (!pet) {
       throw new NotFoundException(
@@ -40,38 +35,28 @@ export class PhotosService {
     return pet;
   }
 
-  private getPublicUrl(
-    storageKey: string,
-  ) {
+  private getPublicUrl(storageKey: string) {
     if (
-      storageKey.startsWith(
-        'http://',
-      ) ||
-      storageKey.startsWith(
-        'https://',
-      )
+      storageKey.startsWith('http://') ||
+      storageKey.startsWith('https://')
     ) {
       return storageKey;
     }
 
     const {
-      data,
-    } =
-      supabase.storage
-        .from(PETS_BUCKET)
-        .getPublicUrl(storageKey);
+      data: { publicUrl },
+    } = supabase.storage
+      .from(PETS_BUCKET)
+      .getPublicUrl(storageKey);
 
-    return data.publicUrl;
+    return publicUrl;
   }
 
   async list(
     petId: string,
     userId: string,
   ) {
-    await this.getOwnedPet(
-      petId,
-      userId,
-    );
+    await this.getOwnedPet(petId, userId);
 
     const photos =
       await this.prisma.petPhoto.findMany({
@@ -88,28 +73,23 @@ export class PhotosService {
         ],
       });
 
-    return photos.map(
-      (photo) => ({
-        id: photo.id,
-        petId: photo.petId,
-        storageKey:
-          photo.storageKey,
-        sortOrder:
-          photo.sortOrder,
-        createdAt:
-          photo.createdAt,
-        url: this.getPublicUrl(
-          photo.storageKey,
-        ),
-      }),
-    );
+    return photos.map((photo) => ({
+      id: photo.id,
+      petId: photo.petId,
+      storageKey: photo.storageKey,
+      sortOrder: photo.sortOrder,
+      createdAt: photo.createdAt,
+      url: this.getPublicUrl(
+        photo.storageKey,
+      ),
+    }));
   }
 
   async create(
     petId: string,
     userId: string,
-    buffer: Buffer,
-    mimetype: string,
+    fileBuffer: Buffer,
+    mimeType: string,
     extension: string,
   ) {
     await this.getOwnedPet(
@@ -117,40 +97,35 @@ export class PhotosService {
       userId,
     );
 
-    if (
-      !buffer ||
-      buffer.length === 0
-    ) {
+    if (!fileBuffer?.length) {
       throw new BadRequestException(
         'No se recibió la fotografía.',
       );
     }
 
     const safeExtension =
-      extension || '.jpg';
+      extension &&
+      extension.startsWith('.')
+        ? extension
+        : '.jpg';
 
     const storageKey =
       `pets/${randomUUID()}${safeExtension}`;
 
-    const {
-      error: uploadError,
-    } =
+    const { error: uploadError } =
       await supabase.storage
         .from(PETS_BUCKET)
         .upload(
           storageKey,
-          buffer,
+          fileBuffer,
           {
-            contentType:
-              mimetype,
+            contentType: mimeType,
             upsert: false,
-            cacheControl:
-              '3600',
           },
         );
 
     if (uploadError) {
-      throw new InternalServerErrorException(
+      throw new BadRequestException(
         `No se pudo guardar la fotografía: ${uploadError.message}`,
       );
     }
@@ -168,34 +143,24 @@ export class PhotosService {
           data: {
             petId,
             storageKey,
-            sortOrder:
-              existingCount,
+            sortOrder: existingCount,
           },
         });
 
       return {
         id: photo.id,
         petId: photo.petId,
-        storageKey:
-          photo.storageKey,
-        sortOrder:
-          photo.sortOrder,
-        createdAt:
-          photo.createdAt,
+        storageKey: photo.storageKey,
+        sortOrder: photo.sortOrder,
+        createdAt: photo.createdAt,
         url: this.getPublicUrl(
           photo.storageKey,
         ),
       };
     } catch (error) {
-      try {
-        await supabase.storage
-          .from(PETS_BUCKET)
-          .remove([
-            storageKey,
-          ]);
-      } catch {
-        // No interrumpimos el error original.
-      }
+      await supabase.storage
+        .from(PETS_BUCKET)
+        .remove([storageKey]);
 
       throw error;
     }
@@ -236,23 +201,18 @@ export class PhotosService {
       });
 
     await this.prisma.$transaction(
-      photos.map(
-        (
-          item,
-          index,
-        ) =>
-          this.prisma.petPhoto.update({
-            where: {
-              id: item.id,
-            },
-            data: {
-              sortOrder:
-                item.id ===
-                photoId
-                  ? 0
-                  : index + 1,
-            },
-          }),
+      photos.map((item, index) =>
+        this.prisma.petPhoto.update({
+          where: {
+            id: item.id,
+          },
+          data: {
+            sortOrder:
+              item.id === photoId
+                ? 0
+                : index + 1,
+          },
+        }),
       ),
     );
 
@@ -286,31 +246,34 @@ export class PhotosService {
       );
     }
 
-    await this.prisma.petPhoto.delete({
-      where: {
-        id: photoId,
-      },
-    });
+    const isSupabaseStorageKey =
+      !photo.storageKey.startsWith(
+        'http://',
+      ) &&
+      !photo.storageKey.startsWith(
+        'https://',
+      );
 
-    try {
-      if (
-        !photo.storageKey.startsWith(
-          'http://',
-        ) &&
-        !photo.storageKey.startsWith(
-          'https://',
-        )
-      ) {
+    if (isSupabaseStorageKey) {
+      const { error: storageError } =
         await supabase.storage
           .from(PETS_BUCKET)
           .remove([
             photo.storageKey,
           ]);
+
+      if (storageError) {
+        throw new BadRequestException(
+          `No se pudo eliminar la fotografía del almacenamiento: ${storageError.message}`,
+        );
       }
-    } catch {
-      // La eliminación de la BD
-      // ya fue realizada.
     }
+
+    await this.prisma.petPhoto.delete({
+      where: {
+        id: photoId,
+      },
+    });
 
     const remaining =
       await this.prisma.petPhoto.findMany({
@@ -322,24 +285,17 @@ export class PhotosService {
         },
       });
 
-    if (
-      remaining.length > 0
-    ) {
+    if (remaining.length > 0) {
       await this.prisma.$transaction(
-        remaining.map(
-          (
-            item,
-            index,
-          ) =>
-            this.prisma.petPhoto.update({
-              where: {
-                id: item.id,
-              },
-              data: {
-                sortOrder:
-                  index,
-              },
-            }),
+        remaining.map((item, index) =>
+          this.prisma.petPhoto.update({
+            where: {
+              id: item.id,
+            },
+            data: {
+              sortOrder: index,
+            },
+          }),
         ),
       );
     }
