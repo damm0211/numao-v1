@@ -25,6 +25,7 @@ interface PetPhoto {
   storageKey: string;
   sortOrder: number;
   createdAt: string;
+   url?: string;
 }
 
 interface PetPreferences {
@@ -625,6 +626,7 @@ export default function PetProfilePage() {
               <img
                 src={getPhotoUrl(
                   primaryPhoto.storageKey,
+                  primaryPhoto.url,
                 )}
                 alt={`Fotografía de ${pet.name}`}
                 style={{
