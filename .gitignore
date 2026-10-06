@@ -45,4 +45,3 @@ tablas.sql
 apps/web/app/mascotas/`[id`]/preferencias/
 /apps/web/mascotas/`[id`]/preferencias/page.tsx
 # Old inactive mascotas route copy
-apps/web/app/mascotas/*id*/preferencias/
