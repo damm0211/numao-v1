@@ -25,6 +25,7 @@ interface Pet {
     id: string;
     storageKey: string;
     sortOrder: number;
+    url?: string;
   }[];
 }
 
@@ -376,19 +377,30 @@ export default function MisMascotasPage() {
     }
   }
 
-  function getPhotoUrl(storageKey: string) {
-    if (storageKey.startsWith('http://') || storageKey.startsWith('https://')) {
+  function getPhotoUrl(
+    storageKey: string,
+    url?: string,
+  ) {
+    if (url) {
+      return url;
+    }
+
+    if (
+      storageKey.startsWith('http://') ||
+      storageKey.startsWith('https://')
+    ) {
       return storageKey;
     }
 
-    const normalizedKey = storageKey.startsWith('/')
-      ? storageKey.slice(1)
-      : storageKey;
+    const normalizedKey =
+      storageKey.startsWith('/')
+        ? storageKey.slice(1)
+        : storageKey;
 
     return `${API_ORIGIN}/uploads/${normalizedKey}`;
   }
-
-  function formatSize(size: string | null) {
+  
+    function formatSize(size: string | null) {
     if (size === 'SMALL') return 'Pequeña';
     if (size === 'MEDIUM') return 'Mediana';
     if (size === 'LARGE') return 'Grande';
@@ -1287,11 +1299,15 @@ export default function MisMascotasPage() {
                   <div className="petPhoto">
                     {pet.photos && pet.photos.length > 0 ? (
                       <img
+
                         src={getPhotoUrl(
-                          [...pet.photos].sort(
-                            (a, b) => a.sortOrder - b.sortOrder,
-                          )[0].storageKey,
-                        )}
+  [...pet.photos].sort(
+    (a, b) => a.sortOrder - b.sortOrder,
+  )[0].storageKey,
+  [...pet.photos].sort(
+    (a, b) => a.sortOrder - b.sortOrder,
+  )[0].url,
+)}
                         alt={`Fotografía de ${pet.name}`}
                         style={{
                           width: '100%',
