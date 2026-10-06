@@ -10,6 +10,8 @@ import { UpdatePetDto } from './dto/update-pet.dto';
 import { UpdatePetPreferencesDto } from './dto/update-pet-preferences.dto';
 import { CreatePetInterestDto } from './dto/create-pet-interest.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { supabase } from '../supabase';
+import { PETS_BUCKET } from '../storage';
 
 @Injectable()
 export class PetsService {
@@ -18,6 +20,23 @@ export class PetsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+    private getPublicPhotoUrl(
+    storageKey: string,
+  ) {
+    if (
+      storageKey.startsWith('http://') ||
+      storageKey.startsWith('https://')
+    ) {
+      return storageKey;
+    }
+
+    const { data } =
+      supabase.storage
+        .from(PETS_BUCKET)
+        .getPublicUrl(storageKey);
+
+    return data.publicUrl;
+  }
   async create(ownerId: string, dto: CreatePetDto) {
     const birthDate = new Date(dto.birthDate);
 
@@ -72,8 +91,8 @@ export class PetsService {
     });
   }
 
-  async findByOwner(ownerId: string) {
-    return this.prisma.pet.findMany({
+    async findByOwner(ownerId: string) {
+    const pets = await this.prisma.pet.findMany({
       where: {
         ownerId,
         status: {
@@ -91,6 +110,16 @@ export class PetsService {
         createdAt: 'asc',
       },
     });
+
+    return pets.map((pet) => ({
+      ...pet,
+      photos: pet.photos.map((photo) => ({
+        ...photo,
+        url: this.getPublicPhotoUrl(
+          photo.storageKey,
+        ),
+      })),
+    }));
   }
 
   async getPublicProfile(id: string, viewerId: string) {
@@ -136,7 +165,13 @@ export class PetsService {
         bio: pet.bio,
         status: pet.status,
       },
-      photos: pet.photos,
+
+       photos: pet.photos.map((photo) => ({
+  ...photo,
+  url: this.getPublicPhotoUrl(
+    photo.storageKey,
+  ),
+})),
       preferences: {
         play: pet.interests.some(
           (interest) => interest.type === 'PLAY' && interest.enabled,
@@ -179,7 +214,15 @@ export class PetsService {
       );
     }
 
-    return pet;
+        return {
+      ...pet,
+      photos: pet.photos.map((photo) => ({
+        ...photo,
+        url: this.getPublicPhotoUrl(
+          photo.storageKey,
+        ),
+      })),
+    };
   }
 
   async update(
