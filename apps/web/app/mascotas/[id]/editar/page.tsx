@@ -42,6 +42,7 @@ interface PetPhoto {
   storageKey: string;
   sortOrder: number;
   createdAt: string;
+   url?: string;
 }
 
 export default function EditPetPage() {
@@ -307,6 +308,7 @@ export default function EditPetPage() {
 
   function getPhotoUrl(
     storageKey: string,
+    url?: string,
   ) {
     if (
       storageKey.startsWith(
@@ -776,6 +778,7 @@ export default function EditPetPage() {
                             <img
                               src={getPhotoUrl(
                                 photo.storageKey,
+                                photo.url,
                               )}
                               alt="Fotografía de la mascota"
                               style={{
