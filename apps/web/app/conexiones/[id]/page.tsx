@@ -19,6 +19,7 @@ interface PetPhoto {
   id: string;
   storageKey: string;
   sortOrder: number;
+  url?: string;
 }
 
 interface Pet {
@@ -155,7 +156,9 @@ function getPhotoUrl(
   if (!photo?.storageKey) {
     return null;
   }
-
+  if (photo.url) {
+    return photo.url;
+}
   if (
     photo.storageKey.startsWith('http://') ||
     photo.storageKey.startsWith('https://')

@@ -27,6 +27,7 @@ interface Pet {
     id: string;
     storageKey: string;
     sortOrder: number;
+    url?: string;
   }[];
 }
 
@@ -112,7 +113,14 @@ function formatTime(value: string) {
   }).format(date);
 }
 
-function getPhotoUrl(storageKey: string) {
+function getPhotoUrl(
+  storageKey: string,
+  url?: string,
+) {
+  if (url) {
+    return url;
+  }
+
   if (
     storageKey.startsWith('http://') ||
     storageKey.startsWith('https://')
@@ -1042,9 +1050,14 @@ body: JSON.stringify({
                     src={getPhotoUrl(
                       [...otherPet.photos].sort(
                         (a, b) =>
+                         a.sortOrder -
+                         b.sortOrder,
+                      )[0].storageKey,
+                      [...otherPet.photos].sort(
+                        (a, b) =>
                           a.sortOrder -
                           b.sortOrder,
-                      )[0].storageKey,
+                      )[0].url,
                     )}
                     alt={`Fotografía de ${otherPet.name}`}
                     style={{

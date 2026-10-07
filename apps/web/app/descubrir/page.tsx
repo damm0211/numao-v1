@@ -16,6 +16,7 @@ interface PetPhoto {
   id: string;
   storageKey: string;
   sortOrder: number;
+  url?: string;
 }
 
 interface Pet {
@@ -39,26 +40,46 @@ interface OwnPet {
   name: string;
   photos?: PetPhoto[];
 }
+function getPhotoUrl(
+  photo: PetPhoto,
+) {
+  if (photo.url) {
+    return photo.url;
+  }
 
+  if (
+    photo.storageKey.startsWith('http://') ||
+    photo.storageKey.startsWith('https://')
+  ) {
+    return photo.storageKey;
+  }
+
+  const normalizedKey =
+    photo.storageKey.startsWith('/')
+      ? photo.storageKey.slice(1)
+      : photo.storageKey;
+
+  return `${FILES_URL}/uploads/${normalizedKey}`;
+}
 const interestLabels: Record<InterestType, string> = {
   PLAY: 'Jugar',
   WALK: 'Pasear',
   SOCIALIZE: 'Socializar',
-  REPRODUCTION: 'Reproducción',
+  REPRODUCTION: 'ReproducciÃ³n',
 };
 
 const interestIcons: Record<InterestType, string> = {
-  PLAY: '🎾',
-  WALK: '🚶',
-  SOCIALIZE: '🤝',
-  REPRODUCTION: '❤️',
+  PLAY: 'ðŸŽ¾',
+  WALK: 'ðŸš¶',
+  SOCIALIZE: 'ðŸ¤',
+  REPRODUCTION: 'â¤ï¸',
 };
 
 const interestDescriptions: Record<InterestType, string> = {
-  PLAY: 'Compartir juegos y energía',
+  PLAY: 'Compartir juegos y energÃ­a',
   WALK: 'Salir y pasear juntos',
   SOCIALIZE: 'Conocer y socializar',
-  REPRODUCTION: 'Buscar una conexión reproductiva',
+  REPRODUCTION: 'Buscar una conexiÃ³n reproductiva',
 };
 
 function calculateAge(birthDate: string) {
@@ -90,11 +111,11 @@ function calculateAge(birthDate: string) {
 }
 
 function formatSize(size: string | null) {
-  if (size === 'SMALL') return 'Pequeña';
+  if (size === 'SMALL') return 'PequeÃ±a';
   if (size === 'MEDIUM') return 'Mediana';
   if (size === 'LARGE') return 'Grande';
 
-  return 'Tamaño no especificado';
+  return 'TamaÃ±o no especificado';
 }
 
 function formatTrait(
@@ -105,7 +126,7 @@ function formatTrait(
     value === null ||
     value === undefined
   ) {
-    return '—';
+    return 'â€”';
   }
 
   const level = Math.min(
@@ -427,7 +448,7 @@ const [matchedCompatibility, setMatchedCompatibility] =
       if (!response.ok) {
         throw new Error(
           data?.message ||
-            'No pudimos enviar el interés.',
+            'No pudimos enviar el interÃ©s.',
         );
       }
 
@@ -449,7 +470,7 @@ if (data?.status === 'MATCHED') {
   setMessage('');
 } else {
   setMessage(
-    `Interés enviado: ${interestLabels[selectedInterest]}.`,
+    `InterÃ©s enviado: ${interestLabels[selectedInterest]}.`,
   );
 
   window.setTimeout(() => {
@@ -472,7 +493,7 @@ if (data?.status === 'MATCHED') {
       setError(
         err instanceof Error
           ? err.message
-          : 'No pudimos enviar el interés.',
+          : 'No pudimos enviar el interÃ©s.',
       );
     } finally {
       setSendingInterest(false);
@@ -537,7 +558,7 @@ if (data?.status === 'MATCHED') {
                 fontSize: '28px',
               }}
             >
-              🐾
+              ðŸ¾
             </div>
 
             <p
@@ -620,7 +641,7 @@ if (data?.status === 'MATCHED') {
                 marginBottom: '14px',
               }}
             >
-              ✦
+              âœ¦
             </div>
 
             <h2
@@ -713,7 +734,7 @@ if (data?.status === 'MATCHED') {
                 fontSize: '34px',
               }}
             >
-              🐶
+              ðŸ¶
             </div>
 
             <p
@@ -873,7 +894,7 @@ if (data?.status === 'MATCHED') {
                   marginBottom: '12px',
                 }}
               >
-                ✨
+                âœ¨
               </div>
 
               <p
@@ -899,7 +920,7 @@ if (data?.status === 'MATCHED') {
                     '-0.04em',
                 }}
               >
-                No hay más perfiles
+                No hay mÃ¡s perfiles
                 por ahora
               </h1>
 
@@ -912,7 +933,7 @@ if (data?.status === 'MATCHED') {
                   lineHeight: 1.65,
                 }}
               >
-                No encontramos más
+                No encontramos mÃ¡s
                 mascotas disponibles
                 para conectar con{' '}
                 <strong>
@@ -1030,15 +1051,15 @@ if (data?.status === 'MATCHED') {
         <section className="numaoMatchCard">
 
           <div className="numaoMatchEyebrow">
-            CONEXIÓN ENCONTRADA
+            CONEXIÃ“N ENCONTRADA
           </div>
 
           <h1 id="numao-match-title">
-            ¡Es un match!
+            Â¡Es un match!
           </h1>
 
           <p className="numaoMatchSubtitle">
-            Tú y {currentPet.name} tienen una gran
+            TÃº y {currentPet.name} tienen una gran
             <br />
             compatibilidad.
           </p>
@@ -1049,12 +1070,12 @@ if (data?.status === 'MATCHED') {
               <div className="numaoMatchPhoto">
                 {sourcePet.photos?.length ? (
                   <img
-                    src={`${FILES_URL}/uploads/${
+                    src={getPhotoUrl(
                       [...sourcePet.photos].sort(
                         (a, b) =>
                           a.sortOrder - b.sortOrder,
-                      )[0].storageKey
-                    }`}
+                     )[0],
+                )}
                     alt={sourcePet.name}
                   />
                 ) : (
@@ -1072,7 +1093,7 @@ if (data?.status === 'MATCHED') {
             </div>
 
             <div className="numaoMatchHeart">
-              ♥
+              â™¥
             </div>
 
             <div className="numaoMatchPet">
@@ -1080,7 +1101,7 @@ if (data?.status === 'MATCHED') {
 
                 {currentPet.photos?.[0]?.storageKey ? (
                   <img
-                    src={`${FILES_URL}/uploads/${currentPet.photos[0].storageKey}`}
+                    src={getPhotoUrl(currentPet.photos[0])}
                     alt={currentPet.name}
                   />
                 ) : (
@@ -1103,7 +1124,7 @@ if (data?.status === 'MATCHED') {
           <div className="numaoMatchCompatibility">
 
             <strong>
-              {matchedCompatibility ?? '—'}
+              {matchedCompatibility ?? 'â€”'}
               {matchedCompatibility !== null && '%'}
             </strong>
 
@@ -1130,7 +1151,7 @@ if (data?.status === 'MATCHED') {
                   className="numaoMatchReason"
                   key={interest}
                 >
-                  <span>✓</span>
+                  <span>âœ“</span>
 
                   <div>
                     <strong>
@@ -1146,11 +1167,11 @@ if (data?.status === 'MATCHED') {
 
             {currentPet.energyLevel !== null && (
               <div className="numaoMatchReason">
-                <span>✓</span>
+                <span>âœ“</span>
 
                 <div>
                   <strong>
-                    Energía compatible
+                    EnergÃ­a compatible
                   </strong>
 
                   <small>
@@ -1534,7 +1555,7 @@ if (data?.status === 'MATCHED') {
               >
                 {showPrimaryPhoto && primaryPhoto ? (
                   <img
-                    src={`${FILES_URL}/uploads/${primaryPhoto.storageKey}`}
+                    src={getPhotoUrl(primaryPhoto)}
                     alt={`Foto de ${currentPet.name}`}
                     onError={() =>
                       setPhotoErrorPetId(currentPet.id)
@@ -1776,8 +1797,8 @@ if (data?.status === 'MATCHED') {
                   age !== null
                     ? `${age} ${
                         age === 1
-                          ? 'año'
-                          : 'años'
+                          ? 'aÃ±o'
+                          : 'aÃ±os'
                       }`
                     : null,
                   currentPet.size
@@ -1911,7 +1932,7 @@ if (data?.status === 'MATCHED') {
               >
                 {[
                   {
-                    label: 'Energía',
+                    label: 'EnergÃ­a',
                     value:
                       currentPet.energyLevel,
                     text: formatTrait(
@@ -2077,7 +2098,7 @@ if (data?.status === 'MATCHED') {
                       '0.13em',
                   }}
                 >
-                  CONEXIÓN
+                  CONEXIÃ“N
                 </p>
 
                 {commonPreferences.length >
@@ -2265,8 +2286,8 @@ if (data?.status === 'MATCHED') {
                         1.5,
                     }}
                   >
-                    Selecciona cómo te
-                    gustaría conectar.
+                    Selecciona cÃ³mo te
+                    gustarÃ­a conectar.
                   </p>
                 </>
               ) : (
@@ -2290,7 +2311,7 @@ if (data?.status === 'MATCHED') {
                 >
                   Por ahora no
                   encontramos
-                  intereses en común
+                  intereses en comÃºn
                   con {sourcePet.name}.
                 </div>
               )}
@@ -2319,7 +2340,7 @@ if (data?.status === 'MATCHED') {
                     1.5,
                 }}
               >
-                ✨ {message}
+                âœ¨ {message}
               </div>
             )}
 
@@ -2385,7 +2406,7 @@ if (data?.status === 'MATCHED') {
                     'all 0.2s ease',
                 }}
               >
-                Ver perfil completo →
+                Ver perfil completo â†’
               </button>
 
               <div
@@ -2481,12 +2502,12 @@ if (data?.status === 'MATCHED') {
                   }}
                 >
                   {sendingInterest
-                    ? 'Enviando…'
+                    ? 'Enviandoâ€¦'
                     : interestSent
-                      ? '✓ Enviado'
+                      ? 'âœ“ Enviado'
                       : selectedInterest
-                        ? `Me interesa · ${interestLabels[selectedInterest]}`
-                        : 'Selecciona una opción'}
+                        ? `Me interesa Â· ${interestLabels[selectedInterest]}`
+                        : 'Selecciona una opciÃ³n'}
                 </button>
               </div>
             </div>
@@ -2507,7 +2528,7 @@ if (data?.status === 'MATCHED') {
           }}
         >
           <span>
-            NUMAO · CONECTA LO QUE IMPORTA
+            NUMAO Â· CONECTA LO QUE IMPORTA
           </span>
 
           <span>
