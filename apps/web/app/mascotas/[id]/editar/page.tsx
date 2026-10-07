@@ -310,7 +310,10 @@ export default function EditPetPage() {
     storageKey: string,
     url?: string,
   ) {
-    if (
+   if (url) {
+    return url;
+  }
+   if (
       storageKey.startsWith(
         'http://',
       ) ||
