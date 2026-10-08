@@ -81,12 +81,19 @@ export class ConnectionsService {
         },
       });
 
-    return connections.map(
-      (connection) => {
-        const isUserA =
-          connection.userAId === userId;
+    return Promise.all(
+      connections.map(
+        async (connection) => {
+          const isUserA =
+            connection.userAId === userId;
 
-        return {
+          const matchedIntentions =
+            await this.getMatchedIntentions(
+              connection.petA.id,
+              connection.petB.id,
+            );
+
+          return {
           id: connection.id,
 
           status:
@@ -108,8 +115,11 @@ export class ConnectionsService {
           otherPet: isUserA
             ? connection.petB
             : connection.petA,
+
+          matchedIntentions,
         };
-      },
+        },
+      ),
     );
   }
 
@@ -165,6 +175,12 @@ export class ConnectionsService {
         ? connection.petB
         : connection.petA;
 
+    const matchedIntentions =
+      await this.getMatchedIntentions(
+        connection.petA.id,
+        connection.petB.id,
+      );
+
     return {
       id: connection.id,
 
@@ -183,7 +199,44 @@ export class ConnectionsService {
       currentPet,
 
       otherPet,
+
+      matchedIntentions,
     };
+  }
+
+  private async getMatchedIntentions(
+    petAId: string,
+    petBId: string,
+  ) {
+    const interests =
+      await this.prisma.petInterest.findMany({
+        where: {
+          state: 'MATCHED',
+
+          OR: [
+            {
+              fromPetId: petAId,
+              toPetId: petBId,
+            },
+            {
+              fromPetId: petBId,
+              toPetId: petAId,
+            },
+          ],
+        },
+
+        select: {
+          type: true,
+        },
+
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+
+    return interests.map(
+      (interest) => interest.type,
+    );
   }
 
   private async getAuthorizedConnection(

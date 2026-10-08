@@ -1,4 +1,4 @@
-﻿import {
+import {
   IsISO8601,
   IsNumber,
   IsOptional,
@@ -32,9 +32,4 @@ export class CreateMeetupDto {
 
   @IsISO8601()
   startAt!: string;
-
-  @IsOptional()
-  @IsISO8601()
-  endAt?: string;
-
 }

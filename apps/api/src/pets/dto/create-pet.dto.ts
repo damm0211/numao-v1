@@ -20,10 +20,16 @@ export class CreatePetDto {
   @IsDateString()
   birthDate!: string;
 
+  @IsIn(['MALE', 'FEMALE'])
+  sex!: 'MALE' | 'FEMALE';
+
+  @IsString()
+  @MinLength(1)
+  commune!: string;
+
   @IsOptional()
   @IsString()
   breed?: string;
-
   @IsOptional()
   @IsIn(['SMALL', 'MEDIUM', 'LARGE'])
   size?: string;

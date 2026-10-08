@@ -21,16 +21,18 @@ const preferenceOptions: Array<{
 export default function CrearMascotaPage() {
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    name: '',
-    birthDate: '',
-    breed: '',
-    size: '',
-    energyLevel: '',
-    sociability: '',
-    playfulness: '',
-    bio: '',
-  });
+ const [form, setForm] = useState({
+   name: '',
+   birthDate: '',
+   sex: '',
+   commune: '',
+   breed: '',
+   size: '',
+   energyLevel: '',
+   sociability: '',
+   playfulness: '',
+   bio: '',
+ });
 
   const [preferences, setPreferences] = useState<Record<PreferenceKey, boolean>>({
     play: false,
@@ -195,6 +197,8 @@ export default function CrearMascotaPage() {
       const body = {
         name: form.name,
         birthDate: form.birthDate,
+        sex: form.sex,
+        commune: form.commune.trim(),
         breed: form.breed || undefined,
         size: form.size || undefined,
         energyLevel: form.energyLevel ? Number(form.energyLevel) : undefined,
@@ -356,21 +360,45 @@ export default function CrearMascotaPage() {
               </label>
 
               <label>
-                Fecha de nacimiento
-                <input
-                  name="birthDate"
-                  type="date"
-                  value={form.birthDate}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+  Fecha de nacimiento
+  <input
+    name="birthDate"
+    type="date"
+    value={form.birthDate}
+    onChange={handleChange}
+    required
+  />
+</label>
 
-              <label>
-                Raza
-                <input name="breed" value={form.breed} onChange={handleChange} />
-              </label>
+<label>
+  Sexo
+  <select
+    name="sex"
+    value={form.sex}
+    onChange={handleChange}
+    required
+  >
+    <option value="">Seleccionar</option>
+    <option value="MALE">Macho</option>
+    <option value="FEMALE">Hembra</option>
+  </select>
+</label>
 
+<label>
+  Comuna
+  <input
+    name="commune"
+    value={form.commune}
+    onChange={handleChange}
+    placeholder="Ej. Independencia"
+    required
+  />
+</label>
+
+<label>
+  Raza
+  <input name="breed" value={form.breed} onChange={handleChange} />
+</label>
               <label>
                 Tamaño
                 <select name="size" value={form.size} onChange={handleChange}>

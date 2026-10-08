@@ -16,6 +16,8 @@ interface Pet {
   id: string;
   name: string;
   birthDate: string;
+  sex: 'MALE' | 'FEMALE';
+  commune: string;
   breed: string | null;
   size: string | null;
   energyLevel: number | null;
@@ -28,6 +30,8 @@ interface Pet {
 interface PetForm {
   name: string;
   birthDate: string;
+  sex: 'MALE' | 'FEMALE' | '';
+  commune: string;
   breed: string;
   size: string;
   energyLevel: number;
@@ -42,7 +46,7 @@ interface PetPhoto {
   storageKey: string;
   sortOrder: number;
   createdAt: string;
-   url?: string;
+  url?: string;
 }
 
 export default function EditPetPage() {
@@ -54,6 +58,8 @@ export default function EditPetPage() {
   const [form, setForm] = useState<PetForm>({
     name: '',
     birthDate: '',
+    sex: '',
+    commune: '',
     breed: '',
     size: '',
     energyLevel: 3,
@@ -147,6 +153,8 @@ export default function EditPetPage() {
           birthDate: data.birthDate
             ? data.birthDate.substring(0, 10)
             : '',
+          sex: data.sex,
+          commune: data.commune || '',
           breed: data.breed || '',
           size: data.size || '',
           energyLevel:
@@ -1159,7 +1167,30 @@ export default function EditPetPage() {
                   required
                 />
               </label>
+              <label>
+                Sexo
+                <select
+                  name="sex"
+                  value={form.sex}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Seleccionar</option>
+                  <option value="MALE">Macho</option>
+                  <option value="FEMALE">Hembra</option>
+                </select>
+              </label>
 
+              <label>
+                Comuna
+                <input
+                  name="commune"
+                  value={form.commune}
+                  onChange={handleChange}
+                  placeholder="Ej. Independencia"
+                  required
+                />
+              </label>
               <label>
                 Raza
                 <input

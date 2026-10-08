@@ -1,0 +1,2 @@
+﻿ALTER TABLE "Meetup"
+DROP COLUMN "endAt";

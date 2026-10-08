@@ -75,6 +75,8 @@ export class PetsService {
         ownerId,
         name: dto.name.trim(),
         birthDate,
+        sex: dto.sex,
+        commune: dto.commune.trim(),
         breed: dto.breed?.trim() || null,
         size: dto.size ?? null,
         energyLevel: dto.energyLevel ?? null,
@@ -249,6 +251,8 @@ export class PetsService {
     const data: {
       name?: string;
       birthDate?: Date;
+      sex?: 'MALE' | 'FEMALE';
+      commune?: string;
       breed?: string | null;
       size?: string | null;
       energyLevel?: number | null;
@@ -271,6 +275,14 @@ export class PetsService {
       }
 
       data.birthDate = birthDate;
+    }
+
+    if (dto.sex !== undefined) {
+      data.sex = dto.sex;
+    }
+
+    if (dto.commune !== undefined) {
+      data.commune = dto.commune.trim();
     }
 
     if (dto.breed !== undefined) {
@@ -425,6 +437,14 @@ export class PetsService {
       select: {
         id: true,
         name: true,
+        birthDate: true,
+        sex: true,
+        commune: true,
+        breed: true,
+        size: true,
+        energyLevel: true,
+        sociability: true,
+        playfulness: true,
         interests: {
           where: {
             enabled: true,
@@ -474,6 +494,8 @@ export class PetsService {
           id: true,
           name: true,
           birthDate: true,
+          sex: true,
+          commune: true,
           breed: true,
           size: true,
           energyLevel: true,
@@ -500,115 +522,402 @@ export class PetsService {
         },
       });
 
-    return pets.map((pet) => {
-      const commonPreferences =
-        pet.interests
-          .map(
-            (interest) => interest.type,
-          )
-          .filter((type) =>
-            sourceInterestTypes.includes(type),
+    return pets
+      .map((pet) => {
+        const commonPreferences =
+          pet.interests
+            .map(
+              (interest) => interest.type,
+            )
+            .filter((type) =>
+              sourceInterestTypes.includes(type),
+            );
+
+        const eligiblePreferences =
+          commonPreferences.filter((type) =>
+            this.isMatchEligible(
+              sourcePet,
+              pet,
+              type,
+            ),
           );
 
-      return {
-        id: pet.id,
-        name: pet.name,
-        birthDate: pet.birthDate,
-        breed: pet.breed,
-        size: pet.size,
-        energyLevel: pet.energyLevel,
-        sociability: pet.sociability,
-        playfulness: pet.playfulness,
-        bio: pet.bio,
-        status: pet.status,
-        photos: pet.photos,
-        preferences:
-          pet.interests.map(
-            (interest) => interest.type,
+        if (eligiblePreferences.length === 0) {
+          return null;
+        }
+
+        return {
+          id: pet.id,
+          name: pet.name,
+          birthDate: pet.birthDate,
+          sex: pet.sex,
+          commune: pet.commune,
+          breed: pet.breed,
+          size: pet.size,
+          energyLevel: pet.energyLevel,
+          sociability: pet.sociability,
+          playfulness: pet.playfulness,
+          bio: pet.bio,
+          status: pet.status,
+          photos: pet.photos.map((photo) => ({
+            ...photo,
+            url: this.getPublicPhotoUrl(
+              photo.storageKey,
+            ),
+          })),
+          preferences:
+            pet.interests.map(
+              (interest) => interest.type,
+            ),
+          commonPreferences,
+          eligiblePreferences,
+          compatibility: this.calculateCompatibility(
+            sourcePet,
+            pet,
           ),
-        commonPreferences,
-      };
-    });
+        };
+      })
+      .filter(
+        (
+          pet,
+        ): pet is NonNullable<typeof pet> =>
+          pet !== null,
+      );
   }
 
   /**
-   * Calcula la compatibilidad v1 entre dos mascotas.
+   * Determina si dos mascotas pueden hacer match para una intención.
    *
-   * Se comparan:
-   * - energyLevel
-   * - sociability
-   * - playfulness
+   * PLAY, WALK y SOCIALIZE no tienen restricción por sexo.
+   * REPRODUCTION exige que ambas mascotas busquen reproducción
+   * y que sean de sexos opuestos.
+   */
+  private isMatchEligible(
+    fromPet: {
+      sex: 'MALE' | 'FEMALE';
+      interests?: Array<{
+        type:
+          | 'PLAY'
+          | 'WALK'
+          | 'SOCIALIZE'
+          | 'REPRODUCTION';
+      }>;
+    },
+    toPet: {
+      sex: 'MALE' | 'FEMALE';
+      interests?: Array<{
+        type:
+          | 'PLAY'
+          | 'WALK'
+          | 'SOCIALIZE'
+          | 'REPRODUCTION';
+      }>;
+    },
+    type:
+      | 'PLAY'
+      | 'WALK'
+      | 'SOCIALIZE'
+      | 'REPRODUCTION',
+  ): boolean {
+    const fromEnabled =
+      fromPet.interests?.some(
+        (interest) => interest.type === type,
+      ) ?? false;
+
+    const toEnabled =
+      toPet.interests?.some(
+        (interest) => interest.type === type,
+      ) ?? false;
+
+    if (!fromEnabled || !toEnabled) {
+      return false;
+    }
+
+    if (type !== 'REPRODUCTION') {
+      return true;
+    }
+
+    return fromPet.sex !== toPet.sex;
+  }
+
+  private normalizeBreed(
+    breed: string | null | undefined,
+  ): string | null {
+    if (!breed) {
+      return null;
+    }
+
+    return breed
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  private calculateBreedScore(
+    fromBreed: string | null | undefined,
+    toBreed: string | null | undefined,
+  ): number | null {
+    const first = this.normalizeBreed(fromBreed);
+    const second = this.normalizeBreed(toBreed);
+
+    if (!first || !second) {
+      return null;
+    }
+
+    if (first === second) {
+      return 100;
+    }
+
+    if (
+      first === 'mestizo' ||
+      second === 'mestizo'
+    ) {
+      return 70;
+    }
+
+    return 70;
+  }
+
+  private normalizeSize(
+    size: string | null | undefined,
+  ): 'SMALL' | 'MEDIUM' | 'LARGE' | null {
+    if (!size) {
+      return null;
+    }
+
+    const normalized = size
+      .trim()
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    if (
+      normalized === 'SMALL' ||
+      normalized === 'PEQUENO' ||
+      normalized === 'PEQUENA'
+    ) {
+      return 'SMALL';
+    }
+
+    if (
+      normalized === 'MEDIUM' ||
+      normalized === 'MEDIANO' ||
+      normalized === 'MEDIANA'
+    ) {
+      return 'MEDIUM';
+    }
+
+    if (
+      normalized === 'LARGE' ||
+      normalized === 'GRANDE'
+    ) {
+      return 'LARGE';
+    }
+
+    return null;
+  }
+
+  private calculateSizeScore(
+    fromSize: string | null | undefined,
+    toSize: string | null | undefined,
+  ): number | null {
+    const first = this.normalizeSize(fromSize);
+    const second = this.normalizeSize(toSize);
+
+    if (!first || !second) {
+      return null;
+    }
+
+    if (first === second) {
+      return 100;
+    }
+
+    const levels = {
+      SMALL: 0,
+      MEDIUM: 1,
+      LARGE: 2,
+    };
+
+    const difference = Math.abs(
+      levels[first] - levels[second],
+    );
+
+    return difference === 1 ? 70 : 40;
+  }
+
+  private calculateAgeScore(
+    fromBirthDate: Date,
+    toBirthDate: Date,
+  ): number {
+    const millisecondsPerYear =
+      365.25 * 24 * 60 * 60 * 1000;
+
+    const ageDifference =
+      Math.abs(
+        fromBirthDate.getTime() -
+          toBirthDate.getTime(),
+      ) / millisecondsPerYear;
+
+    if (ageDifference <= 1) {
+      return 100;
+    }
+
+    if (ageDifference <= 2) {
+      return 90;
+    }
+
+    if (ageDifference <= 3) {
+      return 75;
+    }
+
+    if (ageDifference <= 5) {
+      return 60;
+    }
+
+    return 40;
+  }
+
+  /**
+   * Calcula la compatibilidad definitiva entre dos mascotas.
    *
-   * Cada atributo entrega entre 0 y 100.
-   * El resultado final es el promedio.
+   * Pesos:
+   * - energyLevel: 25%
+   * - sociability: 25%
+   * - playfulness: 20%
+   * - size: 10%
+   * - age: 10%
+   * - breed: 10%
    *
-   * Si un atributo está vacío en una de las mascotas,
-   * simplemente no participa en el promedio.
+   * Si falta un dato en una de las mascotas, ese factor se excluye
+   * y su peso se redistribuye proporcionalmente entre los factores
+   * disponibles.
+   *
+   * La distancia entre comunas no participa en el porcentaje.
    */
   private calculateCompatibility(
     fromPet: {
+      birthDate: Date;
+      breed: string | null;
+      size: string | null;
       energyLevel: number | null;
       sociability: number | null;
       playfulness: number | null;
     },
     toPet: {
+      birthDate: Date;
+      breed: string | null;
+      size: string | null;
       energyLevel: number | null;
       sociability: number | null;
       playfulness: number | null;
     },
   ): number {
-    const scores: number[] = [];
+    const factors: Array<{
+      weight: number;
+      score: number | null;
+    }> = [
+      {
+        weight: 25,
+        score:
+          fromPet.energyLevel !== null &&
+          toPet.energyLevel !== null
+            ? Math.max(
+                0,
+                100 -
+                  (Math.abs(
+                    fromPet.energyLevel -
+                      toPet.energyLevel,
+                  ) /
+                    4) *
+                    100,
+              )
+            : null,
+      },
+      {
+        weight: 25,
+        score:
+          fromPet.sociability !== null &&
+          toPet.sociability !== null
+            ? Math.max(
+                0,
+                100 -
+                  (Math.abs(
+                    fromPet.sociability -
+                      toPet.sociability,
+                  ) /
+                    4) *
+                    100,
+              )
+            : null,
+      },
+      {
+        weight: 20,
+        score:
+          fromPet.playfulness !== null &&
+          toPet.playfulness !== null
+            ? Math.max(
+                0,
+                100 -
+                  (Math.abs(
+                    fromPet.playfulness -
+                      toPet.playfulness,
+                  ) /
+                    4) *
+                    100,
+              )
+            : null,
+      },
+      {
+        weight: 10,
+        score: this.calculateSizeScore(
+          fromPet.size,
+          toPet.size,
+        ),
+      },
+      {
+        weight: 10,
+        score: this.calculateAgeScore(
+          fromPet.birthDate,
+          toPet.birthDate,
+        ),
+      },
+      {
+        weight: 10,
+        score: this.calculateBreedScore(
+          fromPet.breed,
+          toPet.breed,
+        ),
+      },
+    ];
 
-    const addScore = (
-      first: number | null,
-      second: number | null,
-    ) => {
-      if (
-        first === null ||
-        second === null
-      ) {
-        return;
-      }
-
-      const difference = Math.abs(
-        first - second,
+    const availableFactors =
+      factors.filter(
+        (factor) => factor.score !== null,
       );
 
-      const score = Math.max(
-        0,
-        100 - (difference / 4) * 100,
-      );
-
-      scores.push(score);
-    };
-
-    addScore(
-      fromPet.energyLevel,
-      toPet.energyLevel,
-    );
-
-    addScore(
-      fromPet.sociability,
-      toPet.sociability,
-    );
-
-    addScore(
-      fromPet.playfulness,
-      toPet.playfulness,
-    );
-
-    if (scores.length === 0) {
+    if (availableFactors.length === 0) {
       return 0;
     }
 
-    const average =
-      scores.reduce(
-        (sum, score) =>
-          sum + score,
+    const totalWeight =
+      availableFactors.reduce(
+        (sum, factor) =>
+          sum + factor.weight,
         0,
-      ) / scores.length;
+      );
 
-    return Math.round(average);
+    const weightedScore =
+      availableFactors.reduce(
+        (sum, factor) =>
+          sum +
+          (factor.score! * factor.weight) /
+            totalWeight,
+        0,
+      );
+
+    return Math.round(weightedScore);
   }
 
   async getReceivedInterests(
@@ -663,15 +972,24 @@ export class PetsService {
         },
       });
 
-    return interests.map(
+       return interests.map(
       (interest) => ({
         id: interest.id,
         type: interest.type,
         state: interest.state,
         createdAt:
           interest.createdAt,
-        fromPet:
-          interest.fromPet,
+        fromPet: {
+          ...interest.fromPet,
+          photos: interest.fromPet.photos.map(
+            (photo) => ({
+              ...photo,
+              url: this.getPublicPhotoUrl(
+                photo.storageKey,
+              ),
+            }),
+          ),
+        },
       }),
     );
   }
@@ -687,6 +1005,16 @@ export class PetsService {
           id: fromPetId,
           ownerId,
           status: 'ACTIVE',
+        },
+        include: {
+          interests: {
+            where: {
+              enabled: true,
+            },
+            select: {
+              type: true,
+            },
+          },
         },
       });
 
@@ -708,6 +1036,16 @@ export class PetsService {
           id: dto.toPetId,
           status: 'ACTIVE',
         },
+        include: {
+          interests: {
+            where: {
+              enabled: true,
+            },
+            select: {
+              type: true,
+            },
+          },
+        },
       });
 
     if (!toPet) {
@@ -719,6 +1057,34 @@ export class PetsService {
     if (toPet.ownerId === ownerId) {
       throw new BadRequestException(
         'No puedes enviar interés a una mascota de tu propia cuenta',
+      );
+    }
+
+    const isSourceInterestEnabled =
+      fromPet.interests.some(
+        (interest) =>
+          interest.type === dto.type,
+      );
+
+    if (!isSourceInterestEnabled) {
+      throw new BadRequestException(
+        'La intención seleccionada no está activa para esta mascota.',
+      );
+    }
+
+    const isEligible =
+      this.isMatchEligible(
+        fromPet,
+        toPet,
+        dto.type,
+      );
+
+    if (
+      dto.type === 'REPRODUCTION' &&
+      !isEligible
+    ) {
+      throw new BadRequestException(
+        'La reproducción solo puede coincidir entre mascotas que buscan reproducción y tienen sexos opuestos.',
       );
     }
 
@@ -842,8 +1208,24 @@ export class PetsService {
 
     /*
      * Ya existe interés en ambas direcciones.
-     * Calculamos la compatibilidad y generamos MATCHED.
+     * Verificamos nuevamente la elegibilidad actual antes
+     * de convertir ambos intereses en MATCHED.
      */
+    if (
+      !this.isMatchEligible(
+        fromPet,
+        toPet,
+        dto.type,
+      )
+    ) {
+      return {
+        status: 'PENDING',
+        interest,
+        reciprocalInterest,
+        connection: null,
+      };
+    }
+
     const compatibility =
       this.calculateCompatibility(
         fromPet,

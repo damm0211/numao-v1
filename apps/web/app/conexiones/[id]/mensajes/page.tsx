@@ -62,7 +62,6 @@ interface PetFriendlyPlace {
 
 interface MeetupForm {
   startAt: string;
-  endAt: string;
   placeName: string;
   placeAddress: string;
   petFriendlyPlaceId: string;
@@ -75,7 +74,6 @@ interface Meetup {
   petBId: string;
   proposedByUserId: string;
   startAt: string;
-  endAt: string | null;
   placeName: string;
   placeAddress: string | null;
   status: string;
@@ -184,7 +182,6 @@ const [petFriendlyPlaces, setPetFriendlyPlaces] =
 const [meetupForm, setMeetupForm] =
   useState<MeetupForm>({
     startAt: '',
-    endAt: '',
     placeName: '',
     placeAddress: '',
     petFriendlyPlaceId: '',
@@ -614,27 +611,11 @@ async function handleCreateMeetup(
 
 const startAt = new Date(meetupForm.startAt);
 
-const endAt = meetupForm.endAt
-  ? new Date(meetupForm.endAt)
-  : null;
-
-if (
-  Number.isNaN(startAt.getTime()) ||
-  (endAt && Number.isNaN(endAt.getTime()))
-) {
+if (Number.isNaN(startAt.getTime())) {
   setError('La fecha y hora del encuentro no son válidas.');
   return;
 }
 
-if (
-  endAt &&
-  endAt.getTime() <= startAt.getTime()
-) {
-  setError(
-    'La hora de término debe ser posterior al inicio.',
-  );
-  return;
-}
   try {
     setCreatingMeetup(true);
     setError('');
@@ -658,10 +639,6 @@ if (
 
 body: JSON.stringify({
   startAt: startAt.toISOString(),
-
-  endAt: endAt
-    ? endAt.toISOString()
-    : undefined,
 
   placeName:
     meetupForm.placeName.trim(),
@@ -707,8 +684,7 @@ body: JSON.stringify({
 
     setMeetupForm({
       startAt: '',
-      endAt: '',
-      placeName: '',
+        placeName: '',
       placeAddress: '',
       petFriendlyPlaceId: '',
     });
@@ -1242,38 +1218,6 @@ body: JSON.stringify({
                   />
                 </label>
 
-                <label
-                  style={{
-                    display: 'grid',
-                    gap: '6px',
-                    color: '#4c675d',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                  }}
-                >
-                  Hora de término
-                  <input
-                    type="datetime-local"
-                    value={meetupForm.endAt}
-                    onChange={(event) =>
-                      setMeetupForm((current) => ({
-                        ...current,
-                        endAt: event.target.value,
-                      }))
-                    }
-                    style={{
-                      width: '100%',
-                      boxSizing: 'border-box',
-                      border:
-                        '1px solid rgba(18,59,74,0.12)',
-                      borderRadius: '12px',
-                      padding: '11px 12px',
-                      background: '#f8faf7',
-                      color: '#243532',
-                      fontSize: '13px',
-                    }}
-                  />
-                </label>
               </div>
 
               <label
@@ -1426,8 +1370,7 @@ body: JSON.stringify({
                     setShowMeetupForm(false);
                     setMeetupForm({
                       startAt: '',
-                      endAt: '',
-                      placeName: '',
+                                        placeName: '',
                       placeAddress: '',
                       petFriendlyPlaceId: '',
                     });

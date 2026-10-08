@@ -21,6 +21,11 @@ enum PetStatus {
   ARCHIVED
 }
 
+enum PetSex {
+  MALE
+  FEMALE
+}
+
 enum InterestType {
   PLAY
   WALK
@@ -110,6 +115,8 @@ model Pet {
   owner       User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   name        String
   birthDate   DateTime
+  sex         PetSex
+  commune     String
   breed       String?
   size        String?
   energyLevel Int?
@@ -223,7 +230,6 @@ model Meetup {
   petBId           String
   proposedByUserId String
   startAt          DateTime
-  endAt            DateTime?
   placeName        String
   placeAddress     String?
   latitude         Decimal?     @db.Decimal(9, 6)

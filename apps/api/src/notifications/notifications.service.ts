@@ -1,4 +1,4 @@
-﻿import {
+import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -87,7 +87,7 @@ export class NotificationsService {
 
     if (result.count === 0) {
       throw new NotFoundException(
-        'NotificaciÃ³n no encontrada',
+        'Notificación no encontrada',
       );
     }
 
@@ -144,7 +144,7 @@ export class NotificationsService {
           messageId,
           type: 'NEW_MESSAGE',
           title: 'Nuevo mensaje',
-          body: `${senderPetName} te enviÃ³ un mensaje.`,
+          body: `${senderPetName} te envió un mensaje.`,
         },
 
         select: {
@@ -164,7 +164,7 @@ export class NotificationsService {
      * La persistencia sigue siendo la fuente de verdad.
      * Socket.IO solamente entrega el evento en tiempo real.
      *
-     * Si el usuario no estÃ¡ conectado, la notificaciÃ³n y
+     * Si el usuario no está conectado, la notificación y
      * el mensaje siguen almacenados y se recuperan por REST.
      */
     try {
@@ -186,7 +186,7 @@ export class NotificationsService {
 
     /*
      * Este punto queda preparado para incorporar futuros
-     * canales de notificaciÃ³n, por ejemplo:
+     * canales de notificación, por ejemplo:
      *
      * - email
      * - push notification
@@ -216,8 +216,8 @@ export class NotificationsService {
           userId: recipientUserId,
           petId: recipientPetId,
           type: 'NEW_INTEREST',
-          title: 'Nuevo interÃ©s',
-          body: `${senderPetName} mostrÃ³ interÃ©s en tu mascota.`,
+          title: 'Nuevo interés',
+          body: `${senderPetName} mostró interés en tu mascota.`,
         },
 
         select: {
@@ -264,8 +264,8 @@ export class NotificationsService {
     } = params;
 
     /*
-     * Una conexiÃ³n concreta solo debe generar una notificaciÃ³n
-     * NEW_CONNECTION por usuario. Esto hace el mÃ©todo idempotente
+     * Una conexión concreta solo debe generar una notificación
+     * NEW_CONNECTION por usuario. Esto hace el método idempotente
      * y evita duplicados si el flujo de Match vuelve a ejecutarse.
      */
     const existingNotification =
@@ -300,8 +300,8 @@ export class NotificationsService {
           petId: recipientPetId,
           connectionId,
           type: 'NEW_CONNECTION',
-          title: 'Nueva conexiÃ³n',
-          body: `Â¡Tienes una nueva conexiÃ³n con ${otherPetName}! Compatibilidad ${compatibility}%.`,
+          title: 'Nueva conexión',
+          body: `¡Tienes una nueva conexión con ${otherPetName}! Compatibilidad ${compatibility}%.`,
         },
 
         select: {
@@ -418,7 +418,7 @@ export class NotificationsService {
   },
 );
     } catch {
-      // La notificaciÃ³n persistida es la fuente de verdad.
+      // La notificación persistida es la fuente de verdad.
     }
 
     return notification;
@@ -450,7 +450,7 @@ export class NotificationsService {
   },
 );
     } catch {
-      // La notificaciÃ³n persistida es la fuente de verdad.
+      // La notificación persistida es la fuente de verdad.
     }
 
     return notification;

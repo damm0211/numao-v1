@@ -7,7 +7,6 @@ import { API_URL } from '../../../lib/config';
 type Meetup = {
   id: string;
   startAt: string;
-  endAt: string | null;
   placeName: string;
   placeAddress: string | null;
   status: 'PROPOSED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';

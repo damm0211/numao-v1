@@ -1,0 +1,5 @@
+﻿CREATE TYPE "PetSex" AS ENUM ('MALE', 'FEMALE');
+
+ALTER TABLE "Pet"
+ADD COLUMN "sex" "PetSex" NOT NULL,
+ADD COLUMN "commune" TEXT NOT NULL;

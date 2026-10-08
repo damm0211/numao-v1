@@ -7,6 +7,8 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateMeetupDto } from './dto/create-meetup.dto';
+import { supabase } from '../supabase';
+import { PETS_BUCKET } from '../storage';
 
 @Injectable()
 export class MeetupsService {
@@ -14,6 +16,30 @@ export class MeetupsService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
   ) {}
+      private getPublicPhotoUrl(storageKey: string) {
+    if (
+      storageKey.startsWith('http://') ||
+      storageKey.startsWith('https://')
+    ) {
+      return storageKey;
+    }
+
+    const { data } = supabase.storage
+      .from(PETS_BUCKET)
+      .getPublicUrl(storageKey);
+
+    return data.publicUrl;
+  }
+
+  private mapPetPhotos(pet: any) {
+    return {
+      ...pet,
+      photos: pet.photos.map((photo: any) => ({
+        ...photo,
+        url: this.getPublicPhotoUrl(photo.storageKey),
+      })),
+    };
+  }
 
   private async getAuthorizedConnection(connectionId: string, userId: string) {
     const connection = await this.prisma.connection.findFirst({
@@ -37,7 +63,7 @@ export class MeetupsService {
     return connection;
   }
 
-  private validateDates(startAt: Date, endAt?: Date) {
+  private validateDates(startAt: Date) {
     if (Number.isNaN(startAt.getTime())) {
       throw new BadRequestException('La fecha y hora del encuentro no son válidas');
     }
@@ -45,26 +71,13 @@ export class MeetupsService {
     if (startAt.getTime() <= Date.now()) {
       throw new BadRequestException('El encuentro debe ser en el futuro');
     }
-
-    if (endAt) {
-      if (Number.isNaN(endAt.getTime())) {
-        throw new BadRequestException('La hora de término no es válida');
-      }
-
-      if (endAt.getTime() <= startAt.getTime()) {
-        throw new BadRequestException(
-          'La hora de término debe ser posterior al inicio',
-        );
-      }
-    }
   }
 
   async create(connectionId: string, userId: string, dto: CreateMeetupDto) {
     const connection = await this.getAuthorizedConnection(connectionId, userId);
 
     const startAt = new Date(dto.startAt);
-    const endAt = dto.endAt ? new Date(dto.endAt) : undefined;
-    this.validateDates(startAt, endAt);
+    this.validateDates(startAt);
 
     const placeName = dto.placeName.trim();
     if (!placeName) {
@@ -113,7 +126,6 @@ export class MeetupsService {
         petBId,
         proposedByUserId: userId,
         startAt,
-        endAt: endAt ?? null,
         placeName: place?.name ?? placeName,
         placeAddress: place?.address ?? dto.placeAddress?.trim() ?? null,
         latitude:
@@ -194,7 +206,11 @@ export class MeetupsService {
       throw new NotFoundException('Encuentro no encontrado');
     }
 
-    return meetup;
+    return {
+  ...meetup,
+  petA: this.mapPetPhotos(meetup.petA),
+  petB: this.mapPetPhotos(meetup.petB),
+};
   }
 
   async updateStatus(
