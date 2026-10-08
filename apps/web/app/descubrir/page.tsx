@@ -66,21 +66,21 @@ const interestLabels: Record<InterestType, string> = {
   PLAY: 'Jugar',
   WALK: 'Pasear',
   SOCIALIZE: 'Socializar',
-  REPRODUCTION: 'ReproducciÃƒÂ³n',
+  REPRODUCTION: 'Reproducción',
 };
 
 const interestIcons: Record<InterestType, string> = {
-  PLAY: 'Ã°Å¸Å½Â¾',
-  WALK: 'Ã°Å¸Å¡Â¶',
-  SOCIALIZE: 'Ã°Å¸Â¤Â',
-  REPRODUCTION: 'Ã¢ÂÂ¤Ã¯Â¸Â',
+  PLAY: '🎮',
+  WALK: '🚶',
+  SOCIALIZE: '🤝',
+  REPRODUCTION: '❤️',
 };
 
 const interestDescriptions: Record<InterestType, string> = {
-  PLAY: 'Compartir juegos y energÃƒÂ­a',
+  PLAY: 'Compartir juegos y energía',
   WALK: 'Salir y pasear juntos',
   SOCIALIZE: 'Conocer y socializar',
-  REPRODUCTION: 'Buscar una conexiÃƒÂ³n reproductiva',
+  REPRODUCTION: 'Buscar una conexión reproductiva',
 };
 
 function calculateAge(birthDate: string) {
@@ -112,11 +112,11 @@ function calculateAge(birthDate: string) {
 }
 
 function formatSize(size: string | null) {
-  if (size === 'SMALL') return 'PequeÃƒÂ±a';
+  if (size === 'SMALL') return 'Pequeña';
   if (size === 'MEDIUM') return 'Mediana';
   if (size === 'LARGE') return 'Grande';
 
-  return 'TamaÃƒÂ±o no especificado';
+  return 'Tamaño no especificado';
 }
 
 function formatTrait(
@@ -127,7 +127,7 @@ function formatTrait(
     value === null ||
     value === undefined
   ) {
-    return 'Ã¢â‚¬â€';
+    return '—';
   }
 
   const level = Math.min(
@@ -460,7 +460,7 @@ const [matchedCompatibility, setMatchedCompatibility] =
       if (!response.ok) {
         throw new Error(
           data?.message ||
-            'No pudimos enviar el interÃƒÂ©s.',
+            'No pudimos enviar el interés.',
         );
       }
 
@@ -482,7 +482,7 @@ if (data?.status === 'MATCHED') {
   setMessage('');
 } else {
   setMessage(
-    `InterÃƒÂ©s enviado: ${interestLabels[selectedInterest]}.`,
+    `interés enviado: ${interestLabels[selectedInterest]}.`,
   );
 
   window.setTimeout(() => {
@@ -505,7 +505,7 @@ if (data?.status === 'MATCHED') {
       setError(
         err instanceof Error
           ? err.message
-          : 'No pudimos enviar el interÃƒÂ©s.',
+          : 'No pudimos enviar el interés.',
       );
     } finally {
       setSendingInterest(false);
@@ -570,7 +570,7 @@ if (data?.status === 'MATCHED') {
                 fontSize: '28px',
               }}
             >
-              Ã°Å¸ÂÂ¾
+              🎮
             </div>
 
             <p
@@ -653,7 +653,7 @@ if (data?.status === 'MATCHED') {
                 marginBottom: '14px',
               }}
             >
-              Ã¢Å“Â¦
+              ✨
             </div>
 
             <h2
@@ -746,7 +746,7 @@ if (data?.status === 'MATCHED') {
                 fontSize: '34px',
               }}
             >
-              Ã°Å¸ÂÂ¶
+              🚶
             </div>
 
             <p
@@ -906,7 +906,7 @@ if (data?.status === 'MATCHED') {
                   marginBottom: '12px',
                 }}
               >
-                Ã¢Å“Â¨
+                ✨
               </div>
 
               <p
@@ -932,7 +932,7 @@ if (data?.status === 'MATCHED') {
                     '-0.04em',
                 }}
               >
-                No hay mÃƒÂ¡s perfiles
+                No hay más perfiles
                 por ahora
               </h1>
 
@@ -945,7 +945,7 @@ if (data?.status === 'MATCHED') {
                   lineHeight: 1.65,
                 }}
               >
-                No encontramos mÃƒÂ¡s
+                No encontramos más
                 mascotas disponibles
                 para conectar con{' '}
                 <strong>
@@ -1063,15 +1063,15 @@ if (data?.status === 'MATCHED') {
         <section className="numaoMatchCard">
 
           <div className="numaoMatchEyebrow">
-            CONEXIÃƒâ€œN ENCONTRADA
+            CONEXIÓN ENCONTRADA
           </div>
 
           <h1 id="numao-match-title">
-            Ã‚Â¡Es un match!
+            ¡Es un match!
           </h1>
 
           <p className="numaoMatchSubtitle">
-            TÃƒÂº y {currentPet.name} tienen una gran
+            Tú y {currentPet.name} tienen una gran
             <br />
             compatibilidad.
           </p>
@@ -1105,7 +1105,7 @@ if (data?.status === 'MATCHED') {
             </div>
 
             <div className="numaoMatchHeart">
-              Ã¢â„¢Â¥
+              ♥️
             </div>
 
             <div className="numaoMatchPet">
@@ -1136,7 +1136,7 @@ if (data?.status === 'MATCHED') {
           <div className="numaoMatchCompatibility">
 
             <strong>
-              {matchedCompatibility ?? 'Ã¢â‚¬â€'}
+              {matchedCompatibility ?? '—'}
               {matchedCompatibility !== null && '%'}
             </strong>
 
@@ -1163,7 +1163,7 @@ if (data?.status === 'MATCHED') {
                   className="numaoMatchReason"
                   key={interest}
                 >
-                  <span>Ã¢Å“â€œ</span>
+                  <span>✓</span>
 
                   <div>
                     <strong>
@@ -1179,11 +1179,11 @@ if (data?.status === 'MATCHED') {
 
             {currentPet.energyLevel !== null && (
               <div className="numaoMatchReason">
-                <span>Ã¢Å“â€œ</span>
+                <span>✓</span>
 
                 <div>
                   <strong>
-                    EnergÃƒÂ­a compatible
+                    Energía compatible
                   </strong>
 
                   <small>
@@ -1810,8 +1810,8 @@ if (data?.status === 'MATCHED') {
                   age !== null
                     ? `${age} ${
                         age === 1
-                          ? 'aÃƒÂ±o'
-                          : 'aÃƒÂ±os'
+                          ? 'año'
+                          : 'años'
                       }`
                     : null,
                   currentPet.size
@@ -1945,7 +1945,7 @@ if (data?.status === 'MATCHED') {
               >
                 {[
                   {
-                    label: 'EnergÃƒÂ­a',
+                    label: 'Energía',
                     value:
                       currentPet.energyLevel,
                     text: formatTrait(
@@ -2111,7 +2111,7 @@ if (data?.status === 'MATCHED') {
                       '0.13em',
                   }}
                 >
-                  CONEXIÃƒâ€œN
+                  CONEXIÓN
                 </p>
 
                 {commonPreferences.length >
@@ -2299,8 +2299,8 @@ if (data?.status === 'MATCHED') {
                         1.5,
                     }}
                   >
-                    Selecciona cÃƒÂ³mo te
-                    gustarÃƒÂ­a conectar.
+                    Selecciona cómo te
+                    gustaría conectar.
                   </p>
                 </>
               ) : (
@@ -2324,7 +2324,7 @@ if (data?.status === 'MATCHED') {
                 >
                   Por ahora no
                   encontramos
-                  intereses en comÃƒÂºn
+                  intereses en común
                   con {sourcePet.name}.
                 </div>
               )}
@@ -2353,7 +2353,7 @@ if (data?.status === 'MATCHED') {
                     1.5,
                 }}
               >
-                Ã¢Å“Â¨ {message}
+                ✨ {message}
               </div>
             )}
 
@@ -2419,7 +2419,7 @@ if (data?.status === 'MATCHED') {
                     'all 0.2s ease',
                 }}
               >
-                Ver perfil completo Ã¢â€ â€™
+                Ver perfil completo →
               </button>
 
               <div
@@ -2515,12 +2515,12 @@ if (data?.status === 'MATCHED') {
                   }}
                 >
                   {sendingInterest
-                    ? 'EnviandoÃ¢â‚¬Â¦'
+                    ? 'Enviando…'
                     : interestSent
-                      ? 'Ã¢Å“â€œ Enviado'
+                      ? '✓ Enviado'
                       : selectedInterest
-                        ? `Me interesa Ã‚Â· ${interestLabels[selectedInterest]}`
-                        : 'Selecciona una opciÃƒÂ³n'}
+                        ? `Me interesa · ${interestLabels[selectedInterest]}`
+                        : 'Selecciona una opción'}
                 </button>
               </div>
             </div>
@@ -2541,7 +2541,7 @@ if (data?.status === 'MATCHED') {
           }}
         >
           <span>
-            NUMAO Ã‚Â· CONECTA LO QUE IMPORTA
+            NUMAO · CONECTA LO QUE IMPORTA
           </span>
 
           <span>

@@ -159,6 +159,7 @@ export class PetsService {
         id: pet.id,
         name: pet.name,
         birthDate: pet.birthDate,
+        commune: pet.commune,
         breed: pet.breed,
         size: pet.size,
         energyLevel: pet.energyLevel,

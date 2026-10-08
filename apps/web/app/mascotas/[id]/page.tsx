@@ -10,6 +10,7 @@ interface Pet {
   id: string;
   name: string;
   birthDate: string;
+  commune: string;
   breed: string | null;
   size: string | null;
   energyLevel: number | null;
@@ -668,6 +669,10 @@ export default function PetProfilePage() {
                 <p className="petBreed">
                   {pet.breed ||
                     'Raza no especificada'}
+                </p>
+
+                 <p className="petCommune">
+                   📍 {pet.commune}
                 </p>
               </div>
             </div>
