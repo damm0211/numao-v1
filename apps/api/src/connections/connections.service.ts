@@ -16,6 +16,14 @@ import {
   NotificationsService,
 } from '../notifications/notifications.service';
 
+import {
+  supabase,
+} from '../supabase';
+
+import {
+  PETS_BUCKET,
+} from '../storage';
+
 @Injectable()
 export class ConnectionsService {
   constructor(
@@ -48,6 +56,50 @@ export class ConnectionsService {
       },
     },
   };
+
+  private getPublicPhotoUrl(
+    storageKey: string,
+  ) {
+    if (
+      storageKey.startsWith('http://') ||
+      storageKey.startsWith('https://')
+    ) {
+      return storageKey;
+    }
+
+    const {
+      data,
+    } = supabase.storage
+      .from(PETS_BUCKET)
+      .getPublicUrl(storageKey);
+
+    return data.publicUrl;
+  }
+
+  private mapPetPhotos<
+    T extends {
+      photos: Array<{
+        id: string;
+        storageKey: string;
+        sortOrder: number;
+      }>;
+    },
+  >(pet: T) {
+    return {
+      ...pet,
+
+      photos: pet.photos.map(
+        (photo) => ({
+          ...photo,
+
+          url:
+            this.getPublicPhotoUrl(
+              photo.storageKey,
+            ),
+        }),
+      ),
+    };
+  }
 
   async findMine(userId: string) {
     const connections =
@@ -93,31 +145,41 @@ export class ConnectionsService {
               connection.petB.id,
             );
 
+          const petA =
+            this.mapPetPhotos(
+              connection.petA,
+            );
+
+          const petB =
+            this.mapPetPhotos(
+              connection.petB,
+            );
+
           return {
-          id: connection.id,
+            id: connection.id,
 
-          status:
-            connection.status,
+            status:
+              connection.status,
 
-          compatibility:
-            connection.compatibility,
+            compatibility:
+              connection.compatibility,
 
-          algorithmVersion:
-            connection.algorithmVersion,
+            algorithmVersion:
+              connection.algorithmVersion,
 
-          createdAt:
-            connection.createdAt,
+            createdAt:
+              connection.createdAt,
 
-          currentPet: isUserA
-            ? connection.petA
-            : connection.petB,
+            currentPet: isUserA
+              ? petA
+              : petB,
 
-          otherPet: isUserA
-            ? connection.petB
-            : connection.petA,
+            otherPet: isUserA
+              ? petB
+              : petA,
 
-          matchedIntentions,
-        };
+            matchedIntentions,
+          };
         },
       ),
     );
@@ -196,9 +258,15 @@ export class ConnectionsService {
       createdAt:
         connection.createdAt,
 
-      currentPet,
+      currentPet:
+        this.mapPetPhotos(
+          currentPet,
+        ),
 
-      otherPet,
+      otherPet:
+        this.mapPetPhotos(
+          otherPet,
+        ),
 
       matchedIntentions,
     };
@@ -234,9 +302,7 @@ export class ConnectionsService {
         },
       });
 
-    return interests.map(
-      (interest) => interest.type,
-    );
+    return [...new Set(interests.map((interest) => interest.type))];
   }
 
   private async getAuthorizedConnection(

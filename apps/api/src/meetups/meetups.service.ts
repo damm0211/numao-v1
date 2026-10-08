@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   Injectable,
   NotFoundException,
@@ -137,8 +137,28 @@ export class MeetupsService {
         petFriendlyPlaceId: place?.id ?? null,
       },
       include: {
-        petA: { select: { id: true, name: true } },
-        petB: { select: { id: true, name: true } },
+        petA: {
+          select: {
+            id: true,
+            name: true,
+            photos: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+          },
+        },
+        petB: {
+          select: {
+            id: true,
+            name: true,
+            photos: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+          },
+        },
         connection: { select: { id: true } },
         petFriendlyPlace: true,
       },
@@ -158,11 +178,15 @@ export class MeetupsService {
           : connection.petB.name,
     });
 
-    return meetup;
+    return {
+      ...meetup,
+      petA: this.mapPetPhotos(meetup.petA),
+      petB: this.mapPetPhotos(meetup.petB),
+    };
   }
 
   async findMine(userId: string) {
-    return this.prisma.meetup.findMany({
+    const meetups = await this.prisma.meetup.findMany({
       where: {
         connection: {
           status: 'ACTIVE',
@@ -170,13 +194,39 @@ export class MeetupsService {
         },
       },
       include: {
-        petA: { select: { id: true, name: true } },
-        petB: { select: { id: true, name: true } },
+        petA: {
+          select: {
+            id: true,
+            name: true,
+            photos: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+          },
+        },
+        petB: {
+          select: {
+            id: true,
+            name: true,
+            photos: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+          },
+        },
         petFriendlyPlace: true,
         connection: { select: { id: true, status: true } },
       },
       orderBy: { startAt: 'asc' },
     });
+
+    return meetups.map((meetup) => ({
+      ...meetup,
+      petA: this.mapPetPhotos(meetup.petA),
+      petB: this.mapPetPhotos(meetup.petB),
+    }));
   }
 
   async findOne(id: string, userId: string) {
@@ -263,8 +313,28 @@ export class MeetupsService {
       where: { id },
       data: { status },
       include: {
-        petA: { select: { id: true, name: true } },
-        petB: { select: { id: true, name: true } },
+        petA: {
+          select: {
+            id: true,
+            name: true,
+            photos: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+          },
+        },
+        petB: {
+          select: {
+            id: true,
+            name: true,
+            photos: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+          },
+        },
         petFriendlyPlace: true,
         connection: {
           select: {
@@ -304,6 +374,10 @@ export class MeetupsService {
       });
     }
 
-    return updated;
+    return {
+      ...updated,
+      petA: this.mapPetPhotos(updated.petA),
+      petB: this.mapPetPhotos(updated.petB),
+    };
   }
 }

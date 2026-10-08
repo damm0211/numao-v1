@@ -54,14 +54,16 @@ export class PetsController {
 
   @Get('discover')
   async discover(
-    @Req() request: AuthenticatedRequest,
-    @Query('sourcePetId') sourcePetId?: string,
-  ) {
-    return this.petsService.discover(
-      request.user.id,
-      sourcePetId,
-    );
-  }
+  @Req() request: AuthenticatedRequest,
+  @Query('sourcePetId') sourcePetId?: string,
+  @Query('targetPetId') targetPetId?: string,
+) {
+  return this.petsService.discover(
+    request.user.id,
+    sourcePetId,
+    targetPetId,
+  );
+}  
 
   @Get(':id/interests/received')
   async getReceivedInterests(

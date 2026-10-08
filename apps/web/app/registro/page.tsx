@@ -62,6 +62,8 @@ export default function RegistroPage() {
         data.accessToken,
       );
 
+      window.dispatchEvent(new Event('numao:auth-changed'));
+
       localStorage.setItem(
         'numao_user',
         JSON.stringify(data.user),

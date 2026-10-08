@@ -62,6 +62,8 @@ export default function LoginPage() {
         'numao_access_token',
         data.accessToken,
       );
+      
+      window.dispatchEvent(new Event('numao:auth-changed'));      
 
       localStorage.setItem(
         'numao_user',

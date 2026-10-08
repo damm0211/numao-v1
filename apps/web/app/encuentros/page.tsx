@@ -1,8 +1,21 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { API_URL } from '../../lib/config';
+
+type PetPhoto = {
+  id: string;
+  storageKey: string;
+  sortOrder: number;
+  url?: string;
+};
+
+type MeetupPet = {
+  id: string;
+  name: string;
+  photos?: PetPhoto[];
+};
 
 type Meetup = {
   id: string;
@@ -10,8 +23,8 @@ type Meetup = {
   placeName: string;
   placeAddress: string | null;
   status: 'PROPOSED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
-  petA: { id: string; name: string };
-  petB: { id: string; name: string };
+  petA: MeetupPet;
+  petB: MeetupPet;
   petFriendlyPlace?: { id: string; name: string } | null;
 };
 
@@ -34,6 +47,97 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function getPetPhoto(pet: MeetupPet) {
+  const photo = pet.photos?.[0];
+
+  if (!photo) {
+    return null;
+  }
+
+  if (photo.url) {
+    return photo.url;
+  }
+
+  if (
+    photo.storageKey.startsWith('http://') ||
+    photo.storageKey.startsWith('https://')
+  ) {
+    return photo.storageKey;
+  }
+
+  return null;
+}
+
+function PetPhotoCard({
+  pet,
+  size,
+}: {
+  pet: MeetupPet;
+  size: number;
+}) {
+  const photoUrl = getPetPhoto(pet);
+
+  return (
+    <div
+      style={{
+        width: size,
+        flexShrink: 0,
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size >= 80 ? 18 : 14,
+          overflow: 'hidden',
+          background: '#eef3ef',
+          border: '1px solid rgba(18,59,74,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt={pet.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        ) : (
+          <span
+            style={{
+              fontSize: size >= 80 ? 30 : 22,
+              opacity: 0.65,
+            }}
+          >
+            🐶
+          </span>
+        )}
+      </div>
+
+      <div
+        style={{
+          marginTop: 6,
+          color: '#243532',
+          fontSize: size >= 80 ? 13 : 12,
+          fontWeight: 800,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {pet.name}
+      </div>
+    </div>
+  );
+}
+
 export default function EncuentrosPage() {
   const router = useRouter();
   const [items, setItems] = useState<Meetup[]>([]);
@@ -42,13 +146,16 @@ export default function EncuentrosPage() {
 
   async function load() {
     const token = localStorage.getItem('numao_access_token');
+
     if (!token) {
       router.push('/login');
       return;
     }
 
     const response = await fetch(`${API_URL}/meetups`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       cache: 'no-store',
     });
 
@@ -60,8 +167,12 @@ export default function EncuentrosPage() {
     }
 
     const data = await response.json().catch(() => []);
+
     if (!response.ok) {
-      setError(data?.message || 'No pudimos cargar tus encuentros.');
+      setError(
+        data?.message ||
+          'No pudimos cargar tus encuentros.',
+      );
       return;
     }
 
@@ -94,9 +205,16 @@ export default function EncuentrosPage() {
         padding: '28px 20px 50px',
       }}
     >
-      <div style={{ width: 'min(100%, 920px)', margin: '0 auto' }}>
+      <div
+        style={{
+          width: 'min(100%, 920px)',
+          margin: '0 auto',
+        }}
+      >
         <button
-          onClick={() => router.push('/mis-mascotas')}
+          onClick={() =>
+            router.push('/mis-mascotas')
+          }
           style={{
             border: 0,
             background: 'transparent',
@@ -109,7 +227,11 @@ export default function EncuentrosPage() {
           ← Mis mascotas
         </button>
 
-        <header style={{ margin: '20px 0 28px' }}>
+        <header
+          style={{
+            margin: '20px 0 28px',
+          }}
+        >
           <p
             style={{
               margin: 0,
@@ -122,6 +244,7 @@ export default function EncuentrosPage() {
           >
             NUMAO
           </p>
+
           <h1
             style={{
               margin: '7px 0 8px',
@@ -131,7 +254,13 @@ export default function EncuentrosPage() {
           >
             Encuentros
           </h1>
-          <p style={{ margin: 0, color: '#6c7b77' }}>
+
+          <p
+            style={{
+              margin: 0,
+              color: '#6c7b77',
+            }}
+          >
             Tus propuestas, encuentros confirmados e historial.
           </p>
         </header>
@@ -142,7 +271,8 @@ export default function EncuentrosPage() {
               padding: 32,
               borderRadius: 24,
               background: '#fff',
-              border: '1px solid rgba(18,59,74,0.08)',
+              border:
+                '1px solid rgba(18,59,74,0.08)',
             }}
           >
             Cargando encuentros…
@@ -161,7 +291,12 @@ export default function EncuentrosPage() {
         ) : (
           <>
             <section>
-              <h2 style={{ color: '#123b4a', fontSize: 20 }}>
+              <h2
+                style={{
+                  color: '#123b4a',
+                  fontSize: 20,
+                }}
+              >
                 Próximos
               </h2>
 
@@ -171,62 +306,126 @@ export default function EncuentrosPage() {
                     padding: 26,
                     borderRadius: 22,
                     background: '#fff',
-                    border: '1px solid rgba(18,59,74,0.08)',
+                    border:
+                      '1px solid rgba(18,59,74,0.08)',
                     color: '#71807c',
                   }}
                 >
                   Todavía no tienes encuentros pendientes o confirmados.
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                  }}
+                >
                   {upcoming.map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => router.push(`/encuentros/${item.id}`)}
+                      onClick={() =>
+                        router.push(
+                          `/encuentros/${item.id}`,
+                        )
+                      }
                       style={{
+                        width: '100%',
                         textAlign: 'left',
-                        border: '1px solid rgba(18,59,74,0.08)',
+                        border:
+                          '1px solid rgba(18,59,74,0.08)',
                         borderRadius: 22,
                         background: '#fff',
                         padding: 20,
                         cursor: 'pointer',
-                        boxShadow: '0 12px 30px rgba(18,59,74,0.05)',
+                        boxShadow:
+                          '0 12px 30px rgba(18,59,74,0.05)',
                       }}
                     >
                       <div
                         style={{
                           display: 'flex',
-                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          justifyContent:
+                            'space-between',
                           gap: 14,
                         }}
                       >
-                        <strong style={{ color: '#123b4a', fontSize: 18 }}>
-                          {item.petA.name} · {item.petB.name}
-                        </strong>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            minWidth: 0,
+                          }}
+                        >
+                          <PetPhotoCard
+                            pet={item.petA}
+                            size={72}
+                          />
+
+                          <div
+                            style={{
+                              fontSize: 20,
+                              color: '#9aa7a2',
+                              fontWeight: 500,
+                            }}
+                          >
+                            ×
+                          </div>
+
+                          <PetPhotoCard
+                            pet={item.petB}
+                            size={72}
+                          />
+                        </div>
+
                         <span
                           style={{
+                            alignSelf: 'flex-start',
+                            flexShrink: 0,
                             borderRadius: 999,
-                            padding: '6px 10px',
+                            padding:
+                              '6px 10px',
                             background:
-                              item.status === 'CONFIRMED'
+                              item.status ===
+                              'CONFIRMED'
                                 ? '#edf8dc'
                                 : '#f2f6f0',
                             color:
-                              item.status === 'CONFIRMED'
+                              item.status ===
+                              'CONFIRMED'
                                 ? '#527a26'
                                 : '#4c675d',
                             fontSize: 12,
                             fontWeight: 900,
                           }}
                         >
-                          {statusLabel(item.status)}
+                          {statusLabel(
+                            item.status,
+                          )}
                         </span>
                       </div>
 
-                      <p style={{ margin: '10px 0 4px', fontWeight: 800 }}>
-                        {formatDate(item.startAt)}
+                      <p
+                        style={{
+                          margin:
+                            '16px 0 4px',
+                          fontWeight: 800,
+                          textTransform:
+                            'capitalize',
+                        }}
+                      >
+                        {formatDate(
+                          item.startAt,
+                        )}
                       </p>
-                      <p style={{ margin: 0, color: '#71807c' }}>
+
+                      <p
+                        style={{
+                          margin: 0,
+                          color: '#71807c',
+                        }}
+                      >
                         📍 {item.placeName}
                       </p>
                     </button>
@@ -235,8 +434,17 @@ export default function EncuentrosPage() {
               )}
             </section>
 
-            <section style={{ marginTop: 34 }}>
-              <h2 style={{ color: '#123b4a', fontSize: 20 }}>
+            <section
+              style={{
+                marginTop: 34,
+              }}
+            >
+              <h2
+                style={{
+                  color: '#123b4a',
+                  fontSize: 20,
+                }}
+              >
                 Historial
               </h2>
 
@@ -246,32 +454,77 @@ export default function EncuentrosPage() {
                     padding: 26,
                     borderRadius: 22,
                     background: '#fff',
-                    border: '1px solid rgba(18,59,74,0.08)',
+                    border:
+                      '1px solid rgba(18,59,74,0.08)',
                     color: '#71807c',
                   }}
                 >
                   Aún no hay encuentros en el historial.
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: 10 }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 10,
+                  }}
+                >
                   {history.map((item) => (
                     <button
                       key={item.id}
-                      onClick={() => router.push(`/encuentros/${item.id}`)}
+                      onClick={() =>
+                        router.push(
+                          `/encuentros/${item.id}`,
+                        )
+                      }
                       style={{
+                        width: '100%',
                         textAlign: 'left',
-                        border: '1px solid rgba(18,59,74,0.06)',
+                        border:
+                          '1px solid rgba(18,59,74,0.06)',
                         borderRadius: 18,
                         background: '#fff',
                         padding: 16,
                         cursor: 'pointer',
                       }}
                     >
-                      <strong>
-                        {item.petA.name} · {item.petB.name}
-                      </strong>
-                      <div style={{ color: '#71807c', marginTop: 5 }}>
-                        {item.placeName} · {statusLabel(item.status)}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                        }}
+                      >
+                        <PetPhotoCard
+                          pet={item.petA}
+                          size={52}
+                        />
+
+                        <div
+                          style={{
+                            color: '#9aa7a2',
+                            fontWeight: 700,
+                          }}
+                        >
+                          ×
+                        </div>
+
+                        <PetPhotoCard
+                          pet={item.petB}
+                          size={52}
+                        />
+
+                        <div
+                          style={{
+                            marginLeft: 4,
+                            color: '#71807c',
+                            fontSize: 13,
+                          }}
+                        >
+                          {item.placeName} ·{' '}
+                          {statusLabel(
+                            item.status,
+                          )}
+                        </div>
                       </div>
                     </button>
                   ))}

@@ -1,4 +1,5 @@
 'use client';
+import { CHILEAN_COMMUNES, DOG_BREEDS } from "../../../../lib/pet-options";
 
 import {
   ChangeEvent,
@@ -1183,25 +1184,34 @@ export default function EditPetPage() {
 
               <label>
                 Comuna
-                <input
+                <select
                   name="commune"
                   value={form.commune}
                   onChange={handleChange}
-                  placeholder="Ej. Independencia"
                   required
-                />
+                >
+                  <option value="">Seleccionar comuna</option>
+                  {CHILEAN_COMMUNES.map((commune) => (
+                    <option key={commune} value={commune}>
+                      {commune}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
                 Raza
-                <input
+                <select
                   name="breed"
-                  type="text"
                   value={form.breed}
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Ej. Mestiza, Labrador..."
-                />
+                  onChange={handleChange}
+                >
+                  <option value="">Seleccionar raza</option>
+                  {DOG_BREEDS.map((breed) => (
+                    <option key={breed} value={breed}>
+                      {breed}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label>

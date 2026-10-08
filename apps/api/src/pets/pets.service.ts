@@ -427,7 +427,11 @@ export class PetsService {
     return this.getPreferences(id, ownerId);
   }
 
-  async discover(ownerId: string, sourcePetId?: string) {
+  async discover(
+    ownerId: string,
+    sourcePetId?: string,
+    targetPetId?: string,
+  ) {
     const sourcePet = await this.prisma.pet.findFirst({
       where: {
         ownerId,
@@ -470,9 +474,10 @@ export class PetsService {
         (interest) => interest.type,
       );
 
-    if (sourceInterestTypes.length === 0) {
+    if (sourceInterestTypes.length === 0 && !targetPetId) {
       return [];
     }
+    
 
     const pets =
       await this.prisma.pet.findMany({
@@ -481,15 +486,22 @@ export class PetsService {
           ownerId: {
             not: ownerId,
           },
-          interests: {
-            some: {
-              enabled: true,
-              type: {
-                in: sourceInterestTypes,
-              },
-            },
+          OR: [
+    ...(targetPetId
+      ? [{ id: targetPetId }]
+      : []),
+    {
+      interests: {
+        some: {
+          enabled: true,
+          type: {
+            in: sourceInterestTypes,
           },
         },
+      },
+    },
+  ],
+},
         select: {
           id: true,
           name: true,
@@ -542,9 +554,9 @@ export class PetsService {
             ),
           );
 
-        if (eligiblePreferences.length === 0) {
-          return null;
-        }
+          if (eligiblePreferences.length === 0 && pet.id !== targetPetId) {
+            return null;
+          }
 
         return {
           id: pet.id,
@@ -1187,7 +1199,7 @@ export class PetsService {
         try {
           await this.notificationsService.createInterestNotification({
             recipientUserId: toPet.ownerId,
-            recipientPetId: toPet.id,
+            recipientPetId: fromPet.id,
             senderPetName: fromPet.name,
             interestType: dto.type,
           });
@@ -1315,7 +1327,7 @@ export class PetsService {
       try {
         await this.notificationsService.createInterestNotification({
           recipientUserId: toPet.ownerId,
-          recipientPetId: toPet.id,
+          recipientPetId: fromPet.id,
           senderPetName: fromPet.name,
           interestType: dto.type,
         });

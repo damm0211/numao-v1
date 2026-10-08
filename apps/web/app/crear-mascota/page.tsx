@@ -1,4 +1,5 @@
 'use client';
+import { CHILEAN_COMMUNES, DOG_BREEDS } from "../../lib/pet-options";
 import { FormEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { API_URL } from '../../lib/config';
@@ -386,18 +387,35 @@ export default function CrearMascotaPage() {
 
 <label>
   Comuna
-  <input
+  <select
     name="commune"
     value={form.commune}
     onChange={handleChange}
-    placeholder="Ej. Independencia"
     required
-  />
+  >
+    <option value="">Seleccionar comuna</option>
+    {CHILEAN_COMMUNES.map((commune) => (
+      <option key={commune} value={commune}>
+        {commune}
+      </option>
+    ))}
+  </select>
 </label>
 
 <label>
   Raza
-  <input name="breed" value={form.breed} onChange={handleChange} />
+  <select
+    name="breed"
+    value={form.breed}
+    onChange={handleChange}
+  >
+    <option value="">Seleccionar raza</option>
+    {DOG_BREEDS.map((breed) => (
+      <option key={breed} value={breed}>
+        {breed}
+      </option>
+    ))}
+  </select>
 </label>
               <label>
                 Tamaño
