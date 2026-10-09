@@ -5273,3 +5273,63 @@ form button:hover {
     transition: none !important;
   }
 }
+
+/* =========================================================
+   NOTIFICACIONES GLOBALES — AJUSTES RESPONSIVE
+   Evita que la campana se cruce con el menú de cuenta en móvil.
+   ========================================================= */
+
+.globalNotificationBell {
+  top: 18px;
+  right: 18px;
+}
+
+.globalNotificationPanel {
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  max-height: 520px;
+}
+
+.globalNotificationList {
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .globalNotificationBell {
+    top: 10px;
+    right: 12px;
+  }
+
+  .petsShell .topBar {
+    padding-right: 62px;
+  }
+
+  .petsShell .topBar .profileButton {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .globalNotificationPanel {
+    max-height: calc(100dvh - 78px) !important;
+  }
+
+  .globalNotificationList {
+    max-height: calc(100dvh - 170px) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .petsShell .topBar {
+    padding-right: 58px;
+  }
+
+  .petsShell .topBar .profileButton {
+    max-width: 140px;
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+}
+

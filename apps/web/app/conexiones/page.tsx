@@ -10,6 +10,7 @@ interface PetPhoto {
   id: string;
   storageKey: string;
   sortOrder: number;
+  url?: string;
 }
 
 interface Pet {
@@ -131,6 +132,7 @@ function getCompatibilityWidth(
   );
 }
 
+
 function getPhotoUrl(
   pet: Pet,
 ) {
@@ -143,12 +145,28 @@ function getPhotoUrl(
           b.sortOrder,
       )[0];
 
-  if (!photo?.storageKey) {
+  if (!photo) {
+    return null;
+  }
+
+  if (photo.url) {
+    return photo.url;
+  }
+
+  if (
+    photo.storageKey.startsWith('http://') ||
+    photo.storageKey.startsWith('https://')
+  ) {
+    return photo.storageKey;
+  }
+
+  if (!photo.storageKey) {
     return null;
   }
 
   return `${FILES_URL}/uploads/${photo.storageKey}`;
 }
+
 
 export default function ConnectionsPage() {
   const router = useRouter();
@@ -902,12 +920,19 @@ export default function ConnectionsPage() {
                                 display:
                                   'block',
                               }}
-                              onError={(
-                                event,
-                              ) => {
-                                event.currentTarget.style.display =
-                                  'none';
-                              }}
+                              
+                             onError={(event) => {
+                               event.currentTarget.style.display = 'none';
+
+                               const fallback = event.currentTarget.parentElement;
+
+                               if (fallback) {
+                               fallback.textContent = getInitials(pet.name);
+
+                              }
+                             }}
+
+                               
                             />
                           ) : (
                             getInitials(

@@ -569,362 +569,6 @@ export default function MisMascotasPage() {
               position: 'relative',
             }}
           >
-            <button
-              type="button"
-              aria-label="Notificaciones"
-              aria-expanded={notificationOpen}
-              onClick={() =>
-                setNotificationOpen(
-                  (open) => !open,
-                )
-              }
-              style={{
-                position: 'relative',
-                width: '44px',
-                height: '44px',
-                border:
-                  '1px solid rgba(18,59,74,0.10)',
-                borderRadius: '14px',
-                background:
-                  'rgba(255,255,255,0.78)',
-                color: '#123b4a',
-                cursor: 'pointer',
-                fontSize: '19px',
-                boxShadow:
-                  '0 8px 22px rgba(18,59,74,0.05)',
-              }}
-            >
-              🔔
-              {notificationUnreadCount > 0 && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: '-5px',
-                    right: '-5px',
-                    minWidth: '19px',
-                    height: '19px',
-                    padding: '0 5px',
-                    borderRadius: '999px',
-                    background: '#123b4a',
-                    color: '#ffffff',
-                    fontSize: '10px',
-                    fontWeight: 900,
-                    display: 'grid',
-                    placeItems: 'center',
-                    border:
-                      '2px solid #f7f8f5',
-                  }}
-                >
-                  {notificationUnreadCount > 99
-                    ? '99+'
-                    : notificationUnreadCount}
-                </span>
-              )}
-            </button>
-
-            {notificationOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 10px)',
-                  right: 0,
-                  width:
-                    'min(390px, calc(100vw - 32px))',
-                  padding: '12px',
-                  background: '#ffffff',
-                  border:
-                    '1px solid rgba(18,59,74,0.08)',
-                  borderRadius: '20px',
-                  boxShadow:
-                    '0 22px 60px rgba(18,59,74,0.16)',
-                  zIndex: 120,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent:
-                      'space-between',
-                    gap: '12px',
-                    padding:
-                      '8px 10px 12px',
-                  }}
-                >
-                  <div>
-                    <strong
-                      style={{
-                        color: '#123b4a',
-                        fontSize: '16px',
-                      }}
-                    >
-                      Notificaciones
-                    </strong>
-                    <span
-                      style={{
-                        display: 'block',
-                        marginTop: '3px',
-                        color: '#7a8783',
-                        fontSize: '11px',
-                      }}
-                    >
-                      {notificationUnreadCount > 0
-                        ? `${notificationUnreadCount} sin leer`
-                        : 'Todo al día'}
-                    </span>
-                  </div>
-
-                  {notificationUnreadCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={
-                        markAllNotificationsRead
-                      }
-                      style={{
-                        border: 0,
-                        background:
-                          'transparent',
-                        color: '#55752e',
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Marcar todas
-                    </button>
-                  )}
-                </div>
-
-                {notificationLoading &&
-                  notifications.length === 0 && (
-                    <div
-                      style={{
-                        padding:
-                          '28px 15px',
-                        textAlign: 'center',
-                        color: '#7a8783',
-                        fontSize: '13px',
-                      }}
-                    >
-                      Cargando…
-                    </div>
-                  )}
-
-                {!notificationLoading &&
-                  notifications.length === 0 && (
-                    <div
-                      style={{
-                        padding:
-                          '28px 15px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: '26px',
-                          marginBottom: '8px',
-                        }}
-                      >
-                        ✨
-                      </div>
-                      <strong
-                        style={{
-                          color: '#123b4a',
-                          fontSize: '14px',
-                        }}
-                      >
-                        No tienes notificaciones
-                      </strong>
-                      <p
-                        style={{
-                          margin:
-                            '5px 0 0',
-                          color: '#7a8783',
-                          fontSize: '12px',
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        Aquí aparecerán mensajes,
-                        conexiones y otras novedades.
-                      </p>
-                    </div>
-                  )}
-
-                {notifications
-                  .slice(0, 6)
-                  .map((notification) => (
-                    <button
-                      key={notification.id}
-                      type="button"
-                      onClick={() =>
-                        openNotification(
-                          notification,
-                        )
-                      }
-                      style={{
-                        width: '100%',
-                        display: 'block',
-                        border: 0,
-                        borderRadius: '15px',
-                        background:
-                          notification.readAt
-                            ? 'transparent'
-                            : '#f3f8e9',
-                        padding:
-                          '12px 10px',
-                        marginBottom: '4px',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '11px',
-                          alignItems:
-                            'flex-start',
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: '38px',
-                            height: '38px',
-                            flex:
-                              '0 0 auto',
-                            borderRadius:
-                              '12px',
-                            background:
-                              notification.type ===
-                              'NEW_MESSAGE'
-                                ? '#eaf4cf'
-                                : '#edf3f1',
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontSize: '17px',
-                          }}
-                        >
-                          {notification.type ===
-                          'NEW_MESSAGE'
-                            ? '💬'
-                            : '🔔'}
-                        </span>
-
-                        <span
-                          style={{
-                            minWidth: 0,
-                            flex: 1,
-                          }}
-                        >
-                          <strong
-                            style={{
-                              display: 'block',
-                              color: '#123b4a',
-                              fontSize: '13px',
-                            }}
-                          >
-                            {notification.title}
-                          </strong>
-
-                          <span
-                            style={{
-                              display: 'block',
-                              marginTop: '3px',
-                              color: '#687671',
-                              fontSize: '12px',
-                              lineHeight: 1.45,
-                            }}
-                          >
-                            {notification.body}
-                          </span>
-
-                          {notification.pet && (
-                            <span
-                              style={{
-                                display: 'block',
-                                marginTop: '5px',
-                                color: '#55752e',
-                                fontSize: '10px',
-                                fontWeight: 800,
-                              }}
-                            >
-                              Mascota: {notification.pet.name}
-                            </span>
-                          )}
-                        </span>
-
-                        {!notification.readAt && (
-                          <span
-                            style={{
-                              width: '7px',
-                              height: '7px',
-                              flex:
-                                '0 0 auto',
-                              marginTop: '5px',
-                              borderRadius:
-                                '50%',
-                              background:
-                                '#8ebc43',
-                            }}
-                          />
-                        )}
-                      </div>
-                    </button>
-                  ))}
-
-                <div
-                  style={{
-                    borderTop:
-                      '1px solid rgba(18,59,74,0.07)',
-                    marginTop: '7px',
-                    padding:
-                      '10px 8px 2px',
-                    display: 'flex',
-                    justifyContent:
-                      'space-between',
-                    gap: '8px',
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNotificationOpen(false);
-                      router.push(
-                        '/conexiones',
-                      );
-                    }}
-                    style={{
-                      border: 0,
-                      background:
-                        'transparent',
-                      color: '#123b4a',
-                      fontSize: '11px',
-                      fontWeight: 900,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Mis conexiones →
-                  </button>
-
-                  {notifications.length > 6 && (
-                    <span
-                      style={{
-                        color: '#8a9591',
-                        fontSize: '10px',
-                      }}
-                    >
-                      Mostrando las últimas 6
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              position: 'relative',
-            }}
-          >
           <button
             type="button"
             className="profileButton"
@@ -1068,6 +712,303 @@ export default function MisMascotasPage() {
         </div>
       </header>
 
+      {notificationOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '74px',
+            right: '18px',
+            width:
+              'min(390px, calc(100vw - 32px))',
+            padding: '12px',
+            background: '#ffffff',
+            border:
+              '1px solid rgba(18,59,74,0.08)',
+            borderRadius: '20px',
+            boxShadow:
+              '0 22px 60px rgba(18,59,74,0.16)',
+            zIndex: 120,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent:
+                'space-between',
+              gap: '12px',
+              padding:
+                '8px 10px 12px',
+            }}
+          >
+            <div>
+              <strong
+                style={{
+                  color: '#123b4a',
+                  fontSize: '16px',
+                }}
+              >
+                Notificaciones
+              </strong>
+              <span
+                style={{
+                  display: 'block',
+                  marginTop: '3px',
+                  color: '#7a8783',
+                  fontSize: '11px',
+                }}
+              >
+                {notificationUnreadCount > 0
+                  ? `${notificationUnreadCount} sin leer`
+                  : 'Todo al día'}
+              </span>
+            </div>
+
+            {notificationUnreadCount > 0 && (
+              <button
+                type="button"
+                onClick={
+                  markAllNotificationsRead
+                }
+                style={{
+                  border: 0,
+                  background:
+                    'transparent',
+                  color: '#55752e',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                Marcar todas
+              </button>
+            )}
+          </div>
+
+          {notificationLoading &&
+            notifications.length === 0 && (
+              <div
+                style={{
+                  padding:
+                    '28px 15px',
+                  textAlign: 'center',
+                  color: '#7a8783',
+                  fontSize: '13px',
+                }}
+              >
+                Cargando…
+              </div>
+            )}
+
+          {!notificationLoading &&
+            notifications.length === 0 && (
+              <div
+                style={{
+                  padding:
+                    '28px 15px',
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '26px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  ✨
+                </div>
+                <strong
+                  style={{
+                    color: '#123b4a',
+                    fontSize: '14px',
+                  }}
+                >
+                  No tienes notificaciones
+                </strong>
+                <p
+                  style={{
+                    margin:
+                      '5px 0 0',
+                    color: '#7a8783',
+                    fontSize: '12px',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Aquí aparecerán mensajes,
+                  conexiones y otras novedades.
+                </p>
+              </div>
+            )}
+
+          {notifications
+            .slice(0, 6)
+            .map((notification) => (
+              <button
+                key={notification.id}
+                type="button"
+                onClick={() =>
+                  openNotification(
+                    notification,
+                  )
+                }
+                style={{
+                  width: '100%',
+                  display: 'block',
+                  border: 0,
+                  borderRadius: '15px',
+                  background:
+                    notification.readAt
+                      ? 'transparent'
+                      : '#f3f8e9',
+                  padding:
+                    '12px 10px',
+                  marginBottom: '4px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '11px',
+                    alignItems:
+                      'flex-start',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      flex:
+                        '0 0 auto',
+                      borderRadius:
+                        '12px',
+                      background:
+                        notification.type ===
+                        'NEW_MESSAGE'
+                          ? '#eaf4cf'
+                          : '#edf3f1',
+                      display: 'grid',
+                      placeItems: 'center',
+                      fontSize: '17px',
+                    }}
+                  >
+                    {notification.type ===
+                    'NEW_MESSAGE'
+                      ? '💬'
+                      : '🔔'}
+                  </span>
+
+                  <span
+                    style={{
+                      minWidth: 0,
+                      flex: 1,
+                    }}
+                  >
+                    <strong
+                      style={{
+                        display: 'block',
+                        color: '#123b4a',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {notification.title}
+                    </strong>
+
+                    <span
+                      style={{
+                        display: 'block',
+                        marginTop: '3px',
+                        color: '#687671',
+                        fontSize: '12px',
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {notification.body}
+                    </span>
+
+                    {notification.pet && (
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: '5px',
+                          color: '#55752e',
+                          fontSize: '10px',
+                          fontWeight: 800,
+                        }}
+                      >
+                        Mascota: {notification.pet.name}
+                      </span>
+                    )}
+                  </span>
+
+                  {!notification.readAt && (
+                    <span
+                      style={{
+                        width: '7px',
+                        height: '7px',
+                        flex:
+                          '0 0 auto',
+                        marginTop: '5px',
+                        borderRadius:
+                          '50%',
+                        background:
+                          '#8ebc43',
+                      }}
+                    />
+                  )}
+                </div>
+              </button>
+            ))}
+
+          <div
+            style={{
+              borderTop:
+                '1px solid rgba(18,59,74,0.07)',
+              marginTop: '7px',
+              padding:
+                '10px 8px 2px',
+              display: 'flex',
+              justifyContent:
+                'space-between',
+              gap: '8px',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setNotificationOpen(false);
+                router.push(
+                  '/conexiones',
+                );
+              }}
+              style={{
+                border: 0,
+                background:
+                  'transparent',
+                color: '#123b4a',
+                fontSize: '11px',
+                fontWeight: 900,
+                cursor: 'pointer',
+              }}
+            >
+              Mis conexiones →
+            </button>
+
+            {notifications.length > 6 && (
+              <span
+                style={{
+                  color: '#8a9591',
+                  fontSize: '10px',
+                }}
+              >
+                Mostrando las últimas 6
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       <section className="petsContainer">
         <div className="pageIntro">
           <div>
@@ -1197,7 +1138,7 @@ export default function MisMascotasPage() {
             <button
               type="button"
               onClick={() =>
-                setNotificationOpen(true)
+                setNotificationOpen((open) => !open)
               }
               style={{
                 border:

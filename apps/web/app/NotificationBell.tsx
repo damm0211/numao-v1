@@ -404,10 +404,9 @@ export default function NotificationBell() {
 
   return (
     <div
+      className="globalNotificationBell"
       style={{
         position: 'fixed',
-        top: 18,
-        right: 18,
         zIndex: 1000,
       }}
     >
@@ -465,6 +464,7 @@ export default function NotificationBell() {
 
       {open && (
         <div
+          className="globalNotificationPanel"
           style={{
             position: 'absolute',
             top: 56,
@@ -525,6 +525,7 @@ export default function NotificationBell() {
           </div>
 
           <div
+            className="globalNotificationList"
             style={{
               maxHeight: 450,
               overflowY: 'auto',
